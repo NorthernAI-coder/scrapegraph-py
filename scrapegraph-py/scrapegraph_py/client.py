@@ -27,6 +27,7 @@ Example:
         ...     result = client.scrape(website_url="https://example.com")
 """
 import uuid as _uuid
+import warnings
 from typing import Any, Callable, Dict, Optional
 from urllib.parse import urlparse
 
@@ -177,6 +178,19 @@ class Client:
                             static response or callable returning a response
         """
         logger.info("🔑 Initializing Client")
+
+        warnings.warn(
+            "scrapegraph-py v1.x is deprecated and will be removed in a future release. "
+            "Please upgrade to scrapegraph-py v2.x for the new API surface. "
+            "See migration guide: https://github.com/ScrapeGraphAI/scrapegraph-py/pull/82",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        logger.warning(
+            "scrapegraph-py v1.x is deprecated and will be removed in a future release. "
+            "Please upgrade to scrapegraph-py v2.x for the new API surface. "
+            "Migration guide: https://github.com/ScrapeGraphAI/scrapegraph-py/pull/82"
+        )
 
         # Try to get API key from environment if not provided
         if api_key is None:
