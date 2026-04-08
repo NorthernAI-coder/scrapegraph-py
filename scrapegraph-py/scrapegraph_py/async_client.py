@@ -177,14 +177,14 @@ class AsyncClient:
         warnings.warn(
             "scrapegraph-py v1.x is deprecated and will be removed in a future release. "
             "Please upgrade to scrapegraph-py v2.x for the new API surface. "
-            "See migration guide: https://github.com/ScrapeGraphAI/scrapegraph-py/pull/82",
+            "See migration guide: https://docs.scrapegraphai.com/transition-from-v1-to-v2",
             DeprecationWarning,
             stacklevel=2,
         )
         logger.warning(
             "scrapegraph-py v1.x is deprecated and will be removed in a future release. "
             "Please upgrade to scrapegraph-py v2.x for the new API surface. "
-            "Migration guide: https://github.com/ScrapeGraphAI/scrapegraph-py/pull/82"
+            "Migration guide: https://docs.scrapegraphai.com/transition-from-v1-to-v2"
         )
 
         # Try to get API key from environment if not provided
