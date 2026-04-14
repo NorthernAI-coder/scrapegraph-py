@@ -1,30 +1,31 @@
 from __future__ import annotations
 import os
+import re
 import time
 import httpx
 from pydantic import BaseModel
 
 from .env import env
-from .types import (
-    ApiResult,
-    ApiScrapeResponse,
-    ApiExtractResponse,
-    ApiSearchResponse,
-    ApiCrawlResponse,
-    ApiMonitorResponse,
-    ApiHistoryPage,
-    ApiHistoryEntry,
-    ApiCreditsResponse,
-    ApiHealthResponse,
-)
+
+_SERVER_TIMING_RE = re.compile(r"dur=(\d+(?:\.\d+)?)")
 from .schemas import (
+    ApiResult,
     ScrapeRequest,
+    ScrapeResponse,
     ExtractRequest,
+    ExtractResponse,
     SearchRequest,
+    SearchResponse,
     CrawlRequest,
+    CrawlResponse,
     MonitorCreateRequest,
     MonitorUpdateRequest,
+    MonitorResponse,
     HistoryFilter,
+    HistoryPage,
+    HistoryEntry,
+    CreditsResponse,
+    HealthResponse,
 )
 
 
@@ -78,11 +79,11 @@ class AsyncCrawlResource:
     def __init__(self, client: AsyncScrapeGraphAI):
         self._client = client
 
-    async def start(self, params: CrawlRequest) -> ApiResult[ApiCrawlResponse]:
-        return await self._client._post("/crawl", params, ApiCrawlResponse)
+    async def start(self, params: CrawlRequest) -> ApiResult[CrawlResponse]:
+        return await self._client._post("/crawl", params, CrawlResponse)
 
-    async def get(self, id: str) -> ApiResult[ApiCrawlResponse]:
-        return await self._client._get(f"/crawl/{id}", ApiCrawlResponse)
+    async def get(self, id: str) -> ApiResult[CrawlResponse]:
+        return await self._client._get(f"/crawl/{id}", CrawlResponse)
 
     async def stop(self, id: str) -> ApiResult[dict]:
         return await self._client._post_empty(f"/crawl/{id}/stop")
@@ -98,33 +99,33 @@ class AsyncMonitorResource:
     def __init__(self, client: AsyncScrapeGraphAI):
         self._client = client
 
-    async def create(self, params: MonitorCreateRequest) -> ApiResult[ApiMonitorResponse]:
-        return await self._client._post("/monitor", params, ApiMonitorResponse)
+    async def create(self, params: MonitorCreateRequest) -> ApiResult[MonitorResponse]:
+        return await self._client._post("/monitor", params, MonitorResponse)
 
-    async def list(self) -> ApiResult[list[ApiMonitorResponse]]:
-        return await self._client._get("/monitor", list[ApiMonitorResponse])
+    async def list(self) -> ApiResult[list[MonitorResponse]]:
+        return await self._client._get("/monitor", list[MonitorResponse])
 
-    async def get(self, id: str) -> ApiResult[ApiMonitorResponse]:
-        return await self._client._get(f"/monitor/{id}", ApiMonitorResponse)
+    async def get(self, id: str) -> ApiResult[MonitorResponse]:
+        return await self._client._get(f"/monitor/{id}", MonitorResponse)
 
-    async def update(self, id: str, params: MonitorUpdateRequest) -> ApiResult[ApiMonitorResponse]:
-        return await self._client._patch(f"/monitor/{id}", params, ApiMonitorResponse)
+    async def update(self, id: str, params: MonitorUpdateRequest) -> ApiResult[MonitorResponse]:
+        return await self._client._patch(f"/monitor/{id}", params, MonitorResponse)
 
     async def delete(self, id: str) -> ApiResult[dict]:
         return await self._client._delete(f"/monitor/{id}")
 
-    async def pause(self, id: str) -> ApiResult[ApiMonitorResponse]:
-        return await self._client._post_empty(f"/monitor/{id}/pause", ApiMonitorResponse)
+    async def pause(self, id: str) -> ApiResult[MonitorResponse]:
+        return await self._client._post_empty(f"/monitor/{id}/pause", MonitorResponse)
 
-    async def resume(self, id: str) -> ApiResult[ApiMonitorResponse]:
-        return await self._client._post_empty(f"/monitor/{id}/resume", ApiMonitorResponse)
+    async def resume(self, id: str) -> ApiResult[MonitorResponse]:
+        return await self._client._post_empty(f"/monitor/{id}/resume", MonitorResponse)
 
 
 class AsyncHistoryResource:
     def __init__(self, client: AsyncScrapeGraphAI):
         self._client = client
 
-    async def list(self, params: HistoryFilter | None = None) -> ApiResult[ApiHistoryPage]:
+    async def list(self, params: HistoryFilter | None = None) -> ApiResult[HistoryPage]:
         qs = {}
         if params:
             if params.page:
@@ -133,10 +134,10 @@ class AsyncHistoryResource:
                 qs["limit"] = str(params.limit)
             if params.service:
                 qs["service"] = params.service
-        return await self._client._get("/history", ApiHistoryPage, params=qs if qs else None)
+        return await self._client._get("/history", HistoryPage, params=qs if qs else None)
 
-    async def get(self, id: str) -> ApiResult[ApiHistoryEntry]:
-        return await self._client._get(f"/history/{id}", ApiHistoryEntry)
+    async def get(self, id: str) -> ApiResult[HistoryEntry]:
+        return await self._client._get(f"/history/{id}", HistoryEntry)
 
 
 class AsyncScrapeGraphAI:
@@ -184,10 +185,8 @@ class AsyncScrapeGraphAI:
                 resp = await self._http.request(method, path, json=json_body, params=params)
 
             server_timing = resp.headers.get("Server-Timing")
-            if server_timing:
-                import re
-                match = re.search(r"dur=(\d+(?:\.\d+)?)", server_timing)
-                elapsed_ms = int(float(match.group(1))) if match else int((time.perf_counter() - start) * 1000)
+            if server_timing and (match := _SERVER_TIMING_RE.search(server_timing)):
+                elapsed_ms = int(float(match.group(1)))
             else:
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
 
@@ -228,20 +227,20 @@ class AsyncScrapeGraphAI:
     async def _delete(self, path: str) -> ApiResult[dict]:
         return await self._request("DELETE", path, dict)
 
-    async def scrape(self, params: ScrapeRequest) -> ApiResult[ApiScrapeResponse]:
-        return await self._post("/scrape", params, ApiScrapeResponse)
+    async def scrape(self, params: ScrapeRequest) -> ApiResult[ScrapeResponse]:
+        return await self._post("/scrape", params, ScrapeResponse)
 
-    async def extract(self, params: ExtractRequest) -> ApiResult[ApiExtractResponse]:
-        return await self._post("/extract", params, ApiExtractResponse)
+    async def extract(self, params: ExtractRequest) -> ApiResult[ExtractResponse]:
+        return await self._post("/extract", params, ExtractResponse)
 
-    async def search(self, params: SearchRequest) -> ApiResult[ApiSearchResponse]:
-        return await self._post("/search", params, ApiSearchResponse)
+    async def search(self, params: SearchRequest) -> ApiResult[SearchResponse]:
+        return await self._post("/search", params, SearchResponse)
 
-    async def credits(self) -> ApiResult[ApiCreditsResponse]:
-        return await self._get("/credits", ApiCreditsResponse)
+    async def credits(self) -> ApiResult[CreditsResponse]:
+        return await self._get("/credits", CreditsResponse)
 
-    async def health(self) -> ApiResult[ApiHealthResponse]:
-        return await self._request("GET", "/healthz", ApiHealthResponse, base_url=env.health_url)
+    async def health(self) -> ApiResult[HealthResponse]:
+        return await self._request("GET", "/healthz", HealthResponse, base_url=env.health_url)
 
     async def close(self) -> None:
         await self._http.aclose()

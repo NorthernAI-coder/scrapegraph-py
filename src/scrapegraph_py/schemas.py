@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import Literal, Annotated
+from typing import Literal, Annotated, Generic, TypeVar
 from pydantic import BaseModel, Field, HttpUrl, model_validator
+
+T = TypeVar("T")
 
 ApiService = Literal["scrape", "extract", "search", "monitor", "crawl"]
 ApiStatus = Literal["completed", "failed"]
@@ -8,6 +10,10 @@ ApiHtmlMode = Literal["normal", "reader", "prune"]
 ApiFetchMode = Literal["auto", "fast", "js"]
 ApiScrapeFormat = Literal["markdown", "html", "links", "images", "summary", "json", "branding", "screenshot"]
 ApiTimeRange = Literal["past_hour", "past_24_hours", "past_week", "past_month", "past_year"]
+ApiCrawlStatus = Literal["running", "completed", "failed", "paused", "deleted"]
+ApiCrawlPageStatus = Literal["completed", "failed", "skipped"]
+ApiHistoryService = Literal["scrape", "extract", "search", "monitor", "crawl"]
+ApiHistoryStatus = Literal["completed", "failed", "running", "paused", "deleted"]
 
 ApiFetchContentType = Literal[
     "text/html",
@@ -30,6 +36,13 @@ ApiFetchContentType = Literal[
     "text/plain",
     "application/x-latex",
 ]
+
+
+class ApiResult(BaseModel, Generic[T]):
+    status: Literal["success", "error"]
+    data: T | None
+    error: str | None = None
+    elapsed_ms: int
 
 
 class MockConfig(BaseModel):
@@ -210,3 +223,226 @@ class HistoryFilter(BaseModel):
     page: int = Field(default=1, ge=1)
     limit: int = Field(default=20, ge=1, le=100)
     service: ApiService | None = None
+
+
+class TokenUsage(BaseModel):
+    prompt_tokens: int
+    completion_tokens: int
+
+    model_config = {"extra": "allow"}
+
+
+class ChunkerMetadata(BaseModel):
+    chunks: list[dict]
+
+    model_config = {"extra": "allow"}
+
+
+class FetchWarning(BaseModel):
+    reason: Literal["too_short", "empty", "bot_blocked", "spa_shell", "soft_404"]
+    provider: str | None = None
+
+    model_config = {"extra": "allow"}
+
+
+class ScrapeMetadata(BaseModel):
+    provider: str | None = None
+    content_type: str
+    elapsed_ms: int | None = None
+    warnings: list[FetchWarning] | None = None
+    ocr: dict | None = None
+
+    model_config = {"extra": "allow"}
+
+
+class ScrapeResponse(BaseModel):
+    results: dict
+    metadata: ScrapeMetadata
+    errors: dict | None = None
+
+    model_config = {"extra": "allow"}
+
+
+class ExtractResponse(BaseModel):
+    raw: str | None
+    json_data: dict | None = Field(default=None, alias="json")
+    usage: TokenUsage
+    metadata: dict
+
+    model_config = {"extra": "allow", "populate_by_name": True}
+
+
+class SearchResult(BaseModel):
+    url: str
+    title: str
+    content: str
+    provider: str | None = None
+
+    model_config = {"extra": "allow"}
+
+
+class SearchMetadata(BaseModel):
+    search: dict
+    pages: dict
+    chunker: ChunkerMetadata | None = None
+
+    model_config = {"extra": "allow"}
+
+
+class SearchResponse(BaseModel):
+    results: list[SearchResult]
+    json_data: dict | None = Field(default=None, alias="json")
+    raw: str | None = None
+    usage: TokenUsage | None = None
+    metadata: SearchMetadata
+
+    model_config = {"extra": "allow", "populate_by_name": True}
+
+
+class CrawlPage(BaseModel):
+    url: str
+    status: ApiCrawlPageStatus
+    depth: int
+    parent_url: str | None
+    links: list[str]
+    scrape_ref_id: str
+    title: str
+    content_type: str
+    screenshot_url: str | None = None
+    reason: str | None = None
+    error: str | None = None
+
+    model_config = {"extra": "allow"}
+
+
+class CrawlResponse(BaseModel):
+    id: str
+    status: ApiCrawlStatus
+    reason: str | None = None
+    total: int
+    finished: int
+    pages: list[CrawlPage]
+
+    model_config = {"extra": "allow"}
+
+
+class TextChange(BaseModel):
+    type: Literal["added", "removed"]
+    line: int
+    content: str
+
+
+class JsonChange(BaseModel):
+    path: str
+    old: object
+    new: object
+
+
+class SetChange(BaseModel):
+    added: list[str]
+    removed: list[str]
+
+
+class ImageChange(BaseModel):
+    size: int
+    changed: int
+    mask: str | None = None
+
+
+class MonitorDiffs(BaseModel):
+    markdown: list[TextChange] | None = None
+    html: list[TextChange] | None = None
+    json_changes: list[JsonChange] | None = Field(default=None, alias="json")
+    screenshot: ImageChange | None = None
+    links: SetChange | None = None
+    images: SetChange | None = None
+    summary: list[TextChange] | None = None
+    branding: list[JsonChange] | None = None
+
+    model_config = {"extra": "allow", "populate_by_name": True}
+
+
+class WebhookStatus(BaseModel):
+    sent_at: str
+    status_code: int | None
+    error: str | None = None
+
+
+class MonitorResult(BaseModel):
+    changed: bool
+    diffs: MonitorDiffs
+    refs: dict
+    webhook_status: WebhookStatus | None = None
+
+    model_config = {"extra": "allow"}
+
+
+class MonitorResponse(BaseModel):
+    cron_id: str
+    schedule_id: str
+    interval: str
+    status: Literal["active", "paused"]
+    config: dict
+    created_at: str
+    updated_at: str
+
+    model_config = {"extra": "allow"}
+
+
+class HistoryEntry(BaseModel):
+    id: str
+    service: ApiHistoryService
+    status: ApiHistoryStatus
+    error: object | None
+    elapsed_ms: int
+    created_at: str
+    request_parent_id: str | None
+    params: dict
+    result: dict
+
+    model_config = {"extra": "allow"}
+
+
+class HistoryPagination(BaseModel):
+    page: int
+    limit: int
+    total: int
+
+
+class HistoryPage(BaseModel):
+    data: list[HistoryEntry]
+    pagination: HistoryPagination
+
+    model_config = {"extra": "allow"}
+
+
+class JobsStatus(BaseModel):
+    used: int
+    limit: int
+
+
+class CreditsJobs(BaseModel):
+    crawl: JobsStatus
+    monitor: JobsStatus
+
+
+class CreditsResponse(BaseModel):
+    remaining: int
+    used: int
+    plan: str
+    jobs: CreditsJobs
+
+    model_config = {"extra": "allow"}
+
+
+class HealthServices(BaseModel):
+    redis: Literal["ok", "down"]
+    db: Literal["ok", "down"]
+
+
+class HealthResponse(BaseModel):
+    status: str
+    uptime: int
+    services: HealthServices | None = None
+
+    model_config = {"extra": "allow"}

@@ -1,30 +1,31 @@
 from __future__ import annotations
 import os
+import re
 import time
 import httpx
 from pydantic import BaseModel
 
 from .env import env
-from .types import (
-    ApiResult,
-    ApiScrapeResponse,
-    ApiExtractResponse,
-    ApiSearchResponse,
-    ApiCrawlResponse,
-    ApiMonitorResponse,
-    ApiHistoryPage,
-    ApiHistoryEntry,
-    ApiCreditsResponse,
-    ApiHealthResponse,
-)
+
+_SERVER_TIMING_RE = re.compile(r"dur=(\d+(?:\.\d+)?)")
 from .schemas import (
+    ApiResult,
     ScrapeRequest,
+    ScrapeResponse,
     ExtractRequest,
+    ExtractResponse,
     SearchRequest,
+    SearchResponse,
     CrawlRequest,
+    CrawlResponse,
     MonitorCreateRequest,
     MonitorUpdateRequest,
+    MonitorResponse,
     HistoryFilter,
+    HistoryPage,
+    HistoryEntry,
+    CreditsResponse,
+    HealthResponse,
 )
 
 
@@ -78,11 +79,11 @@ class CrawlResource:
     def __init__(self, client: ScrapeGraphAI):
         self._client = client
 
-    def start(self, params: CrawlRequest) -> ApiResult[ApiCrawlResponse]:
-        return self._client._post("/crawl", params, ApiCrawlResponse)
+    def start(self, params: CrawlRequest) -> ApiResult[CrawlResponse]:
+        return self._client._post("/crawl", params, CrawlResponse)
 
-    def get(self, id: str) -> ApiResult[ApiCrawlResponse]:
-        return self._client._get(f"/crawl/{id}", ApiCrawlResponse)
+    def get(self, id: str) -> ApiResult[CrawlResponse]:
+        return self._client._get(f"/crawl/{id}", CrawlResponse)
 
     def stop(self, id: str) -> ApiResult[dict]:
         return self._client._post_empty(f"/crawl/{id}/stop")
@@ -98,33 +99,33 @@ class MonitorResource:
     def __init__(self, client: ScrapeGraphAI):
         self._client = client
 
-    def create(self, params: MonitorCreateRequest) -> ApiResult[ApiMonitorResponse]:
-        return self._client._post("/monitor", params, ApiMonitorResponse)
+    def create(self, params: MonitorCreateRequest) -> ApiResult[MonitorResponse]:
+        return self._client._post("/monitor", params, MonitorResponse)
 
-    def list(self) -> ApiResult[list[ApiMonitorResponse]]:
-        return self._client._get("/monitor", list[ApiMonitorResponse])
+    def list(self) -> ApiResult[list[MonitorResponse]]:
+        return self._client._get("/monitor", list[MonitorResponse])
 
-    def get(self, id: str) -> ApiResult[ApiMonitorResponse]:
-        return self._client._get(f"/monitor/{id}", ApiMonitorResponse)
+    def get(self, id: str) -> ApiResult[MonitorResponse]:
+        return self._client._get(f"/monitor/{id}", MonitorResponse)
 
-    def update(self, id: str, params: MonitorUpdateRequest) -> ApiResult[ApiMonitorResponse]:
-        return self._client._patch(f"/monitor/{id}", params, ApiMonitorResponse)
+    def update(self, id: str, params: MonitorUpdateRequest) -> ApiResult[MonitorResponse]:
+        return self._client._patch(f"/monitor/{id}", params, MonitorResponse)
 
     def delete(self, id: str) -> ApiResult[dict]:
         return self._client._delete(f"/monitor/{id}")
 
-    def pause(self, id: str) -> ApiResult[ApiMonitorResponse]:
-        return self._client._post_empty(f"/monitor/{id}/pause", ApiMonitorResponse)
+    def pause(self, id: str) -> ApiResult[MonitorResponse]:
+        return self._client._post_empty(f"/monitor/{id}/pause", MonitorResponse)
 
-    def resume(self, id: str) -> ApiResult[ApiMonitorResponse]:
-        return self._client._post_empty(f"/monitor/{id}/resume", ApiMonitorResponse)
+    def resume(self, id: str) -> ApiResult[MonitorResponse]:
+        return self._client._post_empty(f"/monitor/{id}/resume", MonitorResponse)
 
 
 class HistoryResource:
     def __init__(self, client: ScrapeGraphAI):
         self._client = client
 
-    def list(self, params: HistoryFilter | None = None) -> ApiResult[ApiHistoryPage]:
+    def list(self, params: HistoryFilter | None = None) -> ApiResult[HistoryPage]:
         qs = {}
         if params:
             if params.page:
@@ -133,10 +134,10 @@ class HistoryResource:
                 qs["limit"] = str(params.limit)
             if params.service:
                 qs["service"] = params.service
-        return self._client._get("/history", ApiHistoryPage, params=qs if qs else None)
+        return self._client._get("/history", HistoryPage, params=qs if qs else None)
 
-    def get(self, id: str) -> ApiResult[ApiHistoryEntry]:
-        return self._client._get(f"/history/{id}", ApiHistoryEntry)
+    def get(self, id: str) -> ApiResult[HistoryEntry]:
+        return self._client._get(f"/history/{id}", HistoryEntry)
 
 
 class ScrapeGraphAI:
@@ -184,10 +185,8 @@ class ScrapeGraphAI:
                 resp = self._http.request(method, path, json=json_body, params=params)
 
             server_timing = resp.headers.get("Server-Timing")
-            if server_timing:
-                import re
-                match = re.search(r"dur=(\d+(?:\.\d+)?)", server_timing)
-                elapsed_ms = int(float(match.group(1))) if match else int((time.perf_counter() - start) * 1000)
+            if server_timing and (match := _SERVER_TIMING_RE.search(server_timing)):
+                elapsed_ms = int(float(match.group(1)))
             else:
                 elapsed_ms = int((time.perf_counter() - start) * 1000)
 
@@ -228,20 +227,20 @@ class ScrapeGraphAI:
     def _delete(self, path: str) -> ApiResult[dict]:
         return self._request("DELETE", path, dict)
 
-    def scrape(self, params: ScrapeRequest) -> ApiResult[ApiScrapeResponse]:
-        return self._post("/scrape", params, ApiScrapeResponse)
+    def scrape(self, params: ScrapeRequest) -> ApiResult[ScrapeResponse]:
+        return self._post("/scrape", params, ScrapeResponse)
 
-    def extract(self, params: ExtractRequest) -> ApiResult[ApiExtractResponse]:
-        return self._post("/extract", params, ApiExtractResponse)
+    def extract(self, params: ExtractRequest) -> ApiResult[ExtractResponse]:
+        return self._post("/extract", params, ExtractResponse)
 
-    def search(self, params: SearchRequest) -> ApiResult[ApiSearchResponse]:
-        return self._post("/search", params, ApiSearchResponse)
+    def search(self, params: SearchRequest) -> ApiResult[SearchResponse]:
+        return self._post("/search", params, SearchResponse)
 
-    def credits(self) -> ApiResult[ApiCreditsResponse]:
-        return self._get("/credits", ApiCreditsResponse)
+    def credits(self) -> ApiResult[CreditsResponse]:
+        return self._get("/credits", CreditsResponse)
 
-    def health(self) -> ApiResult[ApiHealthResponse]:
-        return self._request("GET", "/healthz", ApiHealthResponse, base_url=env.health_url)
+    def health(self) -> ApiResult[HealthResponse]:
+        return self._request("GET", "/healthz", HealthResponse, base_url=env.health_url)
 
     def close(self) -> None:
         self._http.close()
