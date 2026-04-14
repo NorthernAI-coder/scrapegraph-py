@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Literal, Annotated, Generic, TypeVar
-from pydantic import BaseModel, Field, HttpUrl, model_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 
 T = TypeVar("T")
 
@@ -229,20 +229,20 @@ class TokenUsage(BaseModel):
     prompt_tokens: int
     completion_tokens: int
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class ChunkerMetadata(BaseModel):
     chunks: list[dict]
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class FetchWarning(BaseModel):
     reason: Literal["too_short", "empty", "bot_blocked", "spa_shell", "soft_404"]
     provider: str | None = None
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class ScrapeMetadata(BaseModel):
@@ -252,7 +252,7 @@ class ScrapeMetadata(BaseModel):
     warnings: list[FetchWarning] | None = None
     ocr: dict | None = None
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class ScrapeResponse(BaseModel):
@@ -260,7 +260,7 @@ class ScrapeResponse(BaseModel):
     metadata: ScrapeMetadata
     errors: dict | None = None
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class ExtractResponse(BaseModel):
@@ -269,7 +269,7 @@ class ExtractResponse(BaseModel):
     usage: TokenUsage
     metadata: dict
 
-    model_config = {"extra": "allow", "populate_by_name": True}
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
 class SearchResult(BaseModel):
@@ -278,7 +278,7 @@ class SearchResult(BaseModel):
     content: str
     provider: str | None = None
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class SearchMetadata(BaseModel):
@@ -286,7 +286,7 @@ class SearchMetadata(BaseModel):
     pages: dict
     chunker: ChunkerMetadata | None = None
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class SearchResponse(BaseModel):
@@ -296,7 +296,7 @@ class SearchResponse(BaseModel):
     usage: TokenUsage | None = None
     metadata: SearchMetadata
 
-    model_config = {"extra": "allow", "populate_by_name": True}
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
 class CrawlPage(BaseModel):
@@ -312,7 +312,7 @@ class CrawlPage(BaseModel):
     reason: str | None = None
     error: str | None = None
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class CrawlResponse(BaseModel):
@@ -323,7 +323,7 @@ class CrawlResponse(BaseModel):
     finished: int
     pages: list[CrawlPage]
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class TextChange(BaseModel):
@@ -359,7 +359,7 @@ class MonitorDiffs(BaseModel):
     summary: list[TextChange] | None = None
     branding: list[JsonChange] | None = None
 
-    model_config = {"extra": "allow", "populate_by_name": True}
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
 class WebhookStatus(BaseModel):
@@ -374,7 +374,7 @@ class MonitorResult(BaseModel):
     refs: dict
     webhook_status: WebhookStatus | None = None
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class MonitorResponse(BaseModel):
@@ -386,7 +386,7 @@ class MonitorResponse(BaseModel):
     created_at: str
     updated_at: str
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class HistoryEntry(BaseModel):
@@ -400,7 +400,7 @@ class HistoryEntry(BaseModel):
     params: dict
     result: dict
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class HistoryPagination(BaseModel):
@@ -413,7 +413,7 @@ class HistoryPage(BaseModel):
     data: list[HistoryEntry]
     pagination: HistoryPagination
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class JobsStatus(BaseModel):
@@ -432,7 +432,7 @@ class CreditsResponse(BaseModel):
     plan: str
     jobs: CreditsJobs
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
 
 
 class HealthServices(BaseModel):
@@ -445,4 +445,4 @@ class HealthResponse(BaseModel):
     uptime: int
     services: HealthServices | None = None
 
-    model_config = {"extra": "allow"}
+    model_config = ConfigDict(extra="allow")
