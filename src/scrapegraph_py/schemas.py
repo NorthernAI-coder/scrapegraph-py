@@ -1,5 +1,7 @@
 from __future__ import annotations
-from typing import Literal, Annotated, Generic, TypeVar
+
+from typing import Annotated, Generic, Literal, TypeVar
+
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
 from pydantic.alias_generators import to_camel
 
@@ -9,11 +11,14 @@ T = TypeVar("T")
 class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
+
 ApiService = Literal["scrape", "extract", "search", "monitor", "crawl"]
 ApiStatus = Literal["completed", "failed"]
 ApiHtmlMode = Literal["normal", "reader", "prune"]
 ApiFetchMode = Literal["auto", "fast", "js"]
-ApiScrapeFormat = Literal["markdown", "html", "links", "images", "summary", "json", "branding", "screenshot"]
+ApiScrapeFormat = Literal[
+    "markdown", "html", "links", "images", "summary", "json", "branding", "screenshot"
+]
 ApiTimeRange = Literal["past_hour", "past_24_hours", "past_week", "past_month", "past_year"]
 ApiCrawlStatus = Literal["running", "completed", "failed", "paused", "deleted"]
 ApiCrawlPageStatus = Literal["completed", "failed", "skipped"]

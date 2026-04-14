@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import os
 
 
@@ -21,6 +22,7 @@ class Env:
         custom = os.environ.get("SGAI_API_URL")
         if custom:
             import re
+
             return re.sub(r"/v\d+$", "", custom)
         return "https://api.scrapegraphai.com"
 

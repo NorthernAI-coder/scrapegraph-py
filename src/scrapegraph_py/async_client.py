@@ -1,42 +1,50 @@
 from __future__ import annotations
+
 import os
 import re
 import time
+
 import httpx
 from pydantic import BaseModel
 
 from .env import env
-
-_SERVER_TIMING_RE = re.compile(r"dur=(\d+(?:\.\d+)?)")
 from .schemas import (
     ApiResult,
-    ScrapeRequest,
-    ScrapeResponse,
-    ExtractRequest,
-    ExtractResponse,
-    SearchRequest,
-    SearchResponse,
     CrawlRequest,
     CrawlResponse,
-    MonitorCreateRequest,
-    MonitorUpdateRequest,
-    MonitorResponse,
+    CreditsResponse,
+    ExtractRequest,
+    ExtractResponse,
+    HealthResponse,
+    HistoryEntry,
     HistoryFilter,
     HistoryPage,
-    HistoryEntry,
-    CreditsResponse,
-    HealthResponse,
+    MonitorCreateRequest,
+    MonitorResponse,
+    MonitorUpdateRequest,
+    ScrapeRequest,
+    ScrapeResponse,
+    SearchRequest,
+    SearchResponse,
 )
+
+_SERVER_TIMING_RE = re.compile(r"dur=(\d+(?:\.\d+)?)")
 
 
 def _debug(label: str, data: object = None) -> None:
     if not env.debug:
         return
     from datetime import datetime
+
     ts = datetime.now().isoformat()
     if data is not None:
         import json
-        print(f"[{ts}] {label}", json.dumps(data, indent=2, default=str), file=__import__("sys").stderr)
+
+        print(
+            f"[{ts}] {label}",
+            json.dumps(data, indent=2, default=str),
+            file=__import__("sys").stderr,
+        )
     else:
         print(f"[{ts}] {label}", file=__import__("sys").stderr)
 
@@ -198,7 +206,9 @@ class AsyncScrapeGraphAI:
         except Exception as e:
             return ApiResult(status="error", data=None, error=str(e), elapsed_ms=0)
 
-    async def _get[T](self, path: str, response_type: type[T], params: dict | None = None) -> ApiResult[T]:
+    async def _get[T](
+        self, path: str, response_type: type[T], params: dict | None = None
+    ) -> ApiResult[T]:
         return await self._request("GET", path, response_type, params=params)
 
     async def _post[T](self, path: str, body: BaseModel, response_type: type[T]) -> ApiResult[T]:
