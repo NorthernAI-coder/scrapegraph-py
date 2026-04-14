@@ -63,7 +63,7 @@ def _to_camel(s: str) -> str:
 
 
 def _serialize(model: BaseModel) -> dict:
-    data = model.model_dump(exclude_none=True, by_alias=True)
+    data = model.model_dump(mode="json", exclude_none=True, by_alias=True)
 
     def convert_keys(obj):
         if isinstance(obj, dict):
