@@ -57,22 +57,8 @@ def _map_http_error(status: int) -> str:
             return f"HTTP {status}"
 
 
-def _to_camel(s: str) -> str:
-    parts = s.split("_")
-    return parts[0] + "".join(p.capitalize() for p in parts[1:])
-
-
 def _serialize(model: BaseModel) -> dict:
-    data = model.model_dump(mode="json", exclude_none=True, by_alias=True)
-
-    def convert_keys(obj):
-        if isinstance(obj, dict):
-            return {_to_camel(k): convert_keys(v) for k, v in obj.items()}
-        elif isinstance(obj, list):
-            return [convert_keys(i) for i in obj]
-        return obj
-
-    return convert_keys(data)
+    return model.model_dump(mode="json", exclude_none=True, by_alias=True)
 
 
 class AsyncCrawlResource:

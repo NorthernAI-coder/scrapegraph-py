@@ -1,8 +1,13 @@
 from __future__ import annotations
 from typing import Literal, Annotated, Generic, TypeVar
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, model_validator
+from pydantic.alias_generators import to_camel
 
 T = TypeVar("T")
+
+
+class CamelModel(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
 ApiService = Literal["scrape", "extract", "search", "monitor", "crawl"]
 ApiStatus = Literal["completed", "failed"]
@@ -45,7 +50,7 @@ class ApiResult(BaseModel, Generic[T]):
     elapsed_ms: int
 
 
-class MockConfig(BaseModel):
+class MockConfig(CamelModel):
     min_kb: int = Field(default=1, ge=1, le=1000)
     max_kb: int = Field(default=5, ge=1, le=1000)
     min_sleep: int = Field(default=5, ge=0, le=30000)
@@ -53,7 +58,7 @@ class MockConfig(BaseModel):
     write_to_bucket: bool = False
 
 
-class FetchConfig(BaseModel):
+class FetchConfig(CamelModel):
     mode: ApiFetchMode = "auto"
     stealth: bool = False
     timeout: int = Field(default=30000, ge=1000, le=60000)
@@ -65,17 +70,17 @@ class FetchConfig(BaseModel):
     mock: bool | MockConfig = False
 
 
-class MarkdownFormatConfig(BaseModel):
+class MarkdownFormatConfig(CamelModel):
     type: Literal["markdown"] = "markdown"
     mode: ApiHtmlMode = "normal"
 
 
-class HtmlFormatConfig(BaseModel):
+class HtmlFormatConfig(CamelModel):
     type: Literal["html"] = "html"
     mode: ApiHtmlMode = "normal"
 
 
-class ScreenshotFormatConfig(BaseModel):
+class ScreenshotFormatConfig(CamelModel):
     type: Literal["screenshot"] = "screenshot"
     full_page: bool = False
     width: int = Field(default=1440, ge=320, le=3840)
@@ -83,26 +88,26 @@ class ScreenshotFormatConfig(BaseModel):
     quality: int = Field(default=80, ge=1, le=100)
 
 
-class JsonFormatConfig(BaseModel):
+class JsonFormatConfig(CamelModel):
     type: Literal["json"] = "json"
     prompt: Annotated[str, Field(min_length=1, max_length=10000)]
     schema_: dict[str, object] | None = Field(default=None, alias="schema")
     mode: ApiHtmlMode = "normal"
 
 
-class LinksFormatConfig(BaseModel):
+class LinksFormatConfig(CamelModel):
     type: Literal["links"] = "links"
 
 
-class ImagesFormatConfig(BaseModel):
+class ImagesFormatConfig(CamelModel):
     type: Literal["images"] = "images"
 
 
-class SummaryFormatConfig(BaseModel):
+class SummaryFormatConfig(CamelModel):
     type: Literal["summary"] = "summary"
 
 
-class BrandingFormatConfig(BaseModel):
+class BrandingFormatConfig(CamelModel):
     type: Literal["branding"] = "branding"
 
 
@@ -118,7 +123,7 @@ ScrapeFormatEntry = (
 )
 
 
-class ScrapeRequest(BaseModel):
+class ScrapeRequest(CamelModel):
     url: HttpUrl
     content_type: ApiFetchContentType | None = None
     fetch_config: FetchConfig | None = None
@@ -132,7 +137,7 @@ class ScrapeRequest(BaseModel):
         return self
 
 
-class ExtractRequest(BaseModel):
+class ExtractRequest(CamelModel):
     url: HttpUrl | None = None
     html: str | None = None
     markdown: str | None = None
@@ -149,7 +154,7 @@ class ExtractRequest(BaseModel):
         return self
 
 
-class SearchRequest(BaseModel):
+class SearchRequest(CamelModel):
     query: Annotated[str, Field(min_length=1, max_length=500)]
     num_results: int = Field(default=3, ge=1, le=20)
     format: Literal["html", "markdown"] = "markdown"
@@ -167,7 +172,7 @@ class SearchRequest(BaseModel):
         return self
 
 
-class MonitorCreateRequest(BaseModel):
+class MonitorCreateRequest(CamelModel):
     url: HttpUrl
     name: Annotated[str, Field(max_length=200)] | None = None
     formats: list[ScrapeFormatEntry] = Field(default_factory=lambda: [MarkdownFormatConfig()])
@@ -183,7 +188,7 @@ class MonitorCreateRequest(BaseModel):
         return self
 
 
-class MonitorUpdateRequest(BaseModel):
+class MonitorUpdateRequest(CamelModel):
     name: Annotated[str, Field(max_length=200)] | None = None
     formats: list[ScrapeFormatEntry] | None = None
     webhook_url: HttpUrl | None = None
@@ -199,7 +204,7 @@ class MonitorUpdateRequest(BaseModel):
         return self
 
 
-class CrawlRequest(BaseModel):
+class CrawlRequest(CamelModel):
     url: HttpUrl
     formats: list[ScrapeFormatEntry] = Field(default_factory=lambda: [MarkdownFormatConfig()])
     max_depth: int = Field(default=2, ge=0)
@@ -219,7 +224,7 @@ class CrawlRequest(BaseModel):
         return self
 
 
-class HistoryFilter(BaseModel):
+class HistoryFilter(CamelModel):
     page: int = Field(default=1, ge=1)
     limit: int = Field(default=20, ge=1, le=100)
     service: ApiService | None = None
