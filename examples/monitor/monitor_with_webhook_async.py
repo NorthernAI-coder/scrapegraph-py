@@ -12,9 +12,9 @@ async def main():
         ))
 
         if res.status == "success":
-            print("Monitor created:", res.data["cronId"])
-            print("Status:", res.data["status"])
-            print("Interval:", res.data["interval"])
+            print("Monitor created:", res.data.cron_id)
+            print("Status:", res.data.status)
+            print("Interval:", res.data.interval)
             print("Webhook configured")
         else:
             print("Failed:", res.error)

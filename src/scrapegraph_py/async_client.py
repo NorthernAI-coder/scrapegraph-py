@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
 import os
 import re
+import sys
 import time
+from datetime import datetime
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from .env import env
 from .schemas import (
@@ -34,19 +37,11 @@ _SERVER_TIMING_RE = re.compile(r"dur=(\d+(?:\.\d+)?)")
 def _debug(label: str, data: object = None) -> None:
     if not env.debug:
         return
-    from datetime import datetime
-
     ts = datetime.now().isoformat()
     if data is not None:
-        import json
-
-        print(
-            f"[{ts}] {label}",
-            json.dumps(data, indent=2, default=str),
-            file=__import__("sys").stderr,
-        )
+        print(f"[{ts}] {label}", json.dumps(data, indent=2, default=str), file=sys.stderr)
     else:
-        print(f"[{ts}] {label}", file=__import__("sys").stderr)
+        print(f"[{ts}] {label}", file=sys.stderr)
 
 
 def _map_http_error(status: int) -> str:
@@ -193,13 +188,14 @@ class AsyncScrapeGraphAI:
                         d = err_body["detail"]
                         detail = d if isinstance(d, str) else str(d)
                         error = f"{error}: {detail}"
-                except Exception:
-                    pass
+                except Exception as e:
+                    _debug(f"Failed to parse error response: {e}")
                 return ApiResult(status="error", data=None, error=error, elapsed_ms=elapsed_ms)
 
-            data = resp.json()
-            _debug(f"<- {resp.status_code} ({elapsed_ms}ms)", data)
-            return ApiResult(status="success", data=data, elapsed_ms=elapsed_ms)
+            raw = resp.json()
+            _debug(f"<- {resp.status_code} ({elapsed_ms}ms)", raw)
+            parsed = TypeAdapter(response_type).validate_python(raw)
+            return ApiResult(status="success", data=parsed, elapsed_ms=elapsed_ms)
 
         except httpx.TimeoutException:
             return ApiResult(status="error", data=None, error="Request timed out", elapsed_ms=0)

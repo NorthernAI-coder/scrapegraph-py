@@ -25,7 +25,7 @@ res = sgai.scrape(ScrapeRequest(
 ))
 
 if res.status == "success":
-    json_result = res.data["results"].get("json", {})
+    json_result = res.data.results.get("json", {})
 
     print("=== JSON Extraction ===\n")
     print("Extracted data:")

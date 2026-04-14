@@ -9,7 +9,7 @@ async def main():
         ))
 
         if res.status == "success":
-            print("Markdown:", res.data["results"].get("markdown", {}).get("data"))
+            print("Markdown:", res.data.results.get("markdown", {}).get("data"))
             print(f"\nTook {res.elapsed_ms}ms")
         else:
             print("Failed:", res.error)

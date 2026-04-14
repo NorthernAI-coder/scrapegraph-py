@@ -6,13 +6,12 @@ async def main():
         res = await sgai.health()
 
         if res.status == "success":
-            data = res.data
-            print("Status:", data["status"])
-            print("Uptime:", data["uptime"], "seconds")
-            if data.get("services"):
+            print("Status:", res.data.status)
+            print("Uptime:", res.data.uptime, "seconds")
+            if res.data.services:
                 print("Services:")
-                print("  Redis:", data["services"]["redis"])
-                print("  DB:", data["services"]["db"])
+                print("  Redis:", res.data.services.redis)
+                print("  DB:", res.data.services.db)
         else:
             print("Failed:", res.error)
 

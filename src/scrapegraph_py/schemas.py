@@ -12,6 +12,10 @@ class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
 
+class ResponseModel(BaseModel):
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="allow")
+
+
 ApiService = Literal["scrape", "extract", "search", "monitor", "crawl"]
 ApiStatus = Literal["completed", "failed"]
 ApiHtmlMode = Literal["normal", "reader", "prune"]
@@ -235,27 +239,27 @@ class HistoryFilter(CamelModel):
     service: ApiService | None = None
 
 
-class TokenUsage(BaseModel):
+class TokenUsage(ResponseModel):
     prompt_tokens: int
     completion_tokens: int
 
     model_config = ConfigDict(extra="allow")
 
 
-class ChunkerMetadata(BaseModel):
+class ChunkerMetadata(ResponseModel):
     chunks: list[dict]
 
     model_config = ConfigDict(extra="allow")
 
 
-class FetchWarning(BaseModel):
+class FetchWarning(ResponseModel):
     reason: Literal["too_short", "empty", "bot_blocked", "spa_shell", "soft_404"]
     provider: str | None = None
 
     model_config = ConfigDict(extra="allow")
 
 
-class ScrapeMetadata(BaseModel):
+class ScrapeMetadata(ResponseModel):
     provider: str | None = None
     content_type: str
     elapsed_ms: int | None = None
@@ -265,7 +269,7 @@ class ScrapeMetadata(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class ScrapeResponse(BaseModel):
+class ScrapeResponse(ResponseModel):
     results: dict
     metadata: ScrapeMetadata
     errors: dict | None = None
@@ -273,7 +277,7 @@ class ScrapeResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class ExtractResponse(BaseModel):
+class ExtractResponse(ResponseModel):
     raw: str | None
     json_data: dict | None = Field(default=None, alias="json")
     usage: TokenUsage
@@ -282,7 +286,7 @@ class ExtractResponse(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
-class SearchResult(BaseModel):
+class SearchResult(ResponseModel):
     url: str
     title: str
     content: str
@@ -291,7 +295,7 @@ class SearchResult(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class SearchMetadata(BaseModel):
+class SearchMetadata(ResponseModel):
     search: dict
     pages: dict
     chunker: ChunkerMetadata | None = None
@@ -299,7 +303,7 @@ class SearchMetadata(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class SearchResponse(BaseModel):
+class SearchResponse(ResponseModel):
     results: list[SearchResult]
     json_data: dict | None = Field(default=None, alias="json")
     raw: str | None = None
@@ -309,7 +313,7 @@ class SearchResponse(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
-class CrawlPage(BaseModel):
+class CrawlPage(ResponseModel):
     url: str
     status: ApiCrawlPageStatus
     depth: int
@@ -325,7 +329,7 @@ class CrawlPage(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class CrawlResponse(BaseModel):
+class CrawlResponse(ResponseModel):
     id: str
     status: ApiCrawlStatus
     reason: str | None = None
@@ -336,30 +340,30 @@ class CrawlResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class TextChange(BaseModel):
+class TextChange(ResponseModel):
     type: Literal["added", "removed"]
     line: int
     content: str
 
 
-class JsonChange(BaseModel):
+class JsonChange(ResponseModel):
     path: str
     old: object
     new: object
 
 
-class SetChange(BaseModel):
+class SetChange(ResponseModel):
     added: list[str]
     removed: list[str]
 
 
-class ImageChange(BaseModel):
+class ImageChange(ResponseModel):
     size: int
     changed: int
     mask: str | None = None
 
 
-class MonitorDiffs(BaseModel):
+class MonitorDiffs(ResponseModel):
     markdown: list[TextChange] | None = None
     html: list[TextChange] | None = None
     json_changes: list[JsonChange] | None = Field(default=None, alias="json")
@@ -372,13 +376,13 @@ class MonitorDiffs(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
 
 
-class WebhookStatus(BaseModel):
+class WebhookStatus(ResponseModel):
     sent_at: str
     status_code: int | None
     error: str | None = None
 
 
-class MonitorResult(BaseModel):
+class MonitorResult(ResponseModel):
     changed: bool
     diffs: MonitorDiffs
     refs: dict
@@ -387,7 +391,7 @@ class MonitorResult(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class MonitorResponse(BaseModel):
+class MonitorResponse(ResponseModel):
     cron_id: str
     schedule_id: str
     interval: str
@@ -399,7 +403,7 @@ class MonitorResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class HistoryEntry(BaseModel):
+class HistoryEntry(ResponseModel):
     id: str
     service: ApiHistoryService
     status: ApiHistoryStatus
@@ -413,30 +417,30 @@ class HistoryEntry(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class HistoryPagination(BaseModel):
+class HistoryPagination(ResponseModel):
     page: int
     limit: int
     total: int
 
 
-class HistoryPage(BaseModel):
+class HistoryPage(ResponseModel):
     data: list[HistoryEntry]
     pagination: HistoryPagination
 
     model_config = ConfigDict(extra="allow")
 
 
-class JobsStatus(BaseModel):
+class JobsStatus(ResponseModel):
     used: int
     limit: int
 
 
-class CreditsJobs(BaseModel):
+class CreditsJobs(ResponseModel):
     crawl: JobsStatus
     monitor: JobsStatus
 
 
-class CreditsResponse(BaseModel):
+class CreditsResponse(ResponseModel):
     remaining: int
     used: int
     plan: str
@@ -445,12 +449,12 @@ class CreditsResponse(BaseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class HealthServices(BaseModel):
+class HealthServices(ResponseModel):
     redis: Literal["ok", "down"]
     db: Literal["ok", "down"]
 
 
-class HealthResponse(BaseModel):
+class HealthResponse(ResponseModel):
     status: str
     uptime: int
     services: HealthServices | None = None

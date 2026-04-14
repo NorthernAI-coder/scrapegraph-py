@@ -18,7 +18,7 @@ res = sgai.scrape(ScrapeRequest(
 ))
 
 if res.status == "success":
-    results = res.data["results"]
+    results = res.data.results
 
     print("=== Markdown ===")
     print(results.get("markdown", {}).get("data", [""])[0][:500], "...")

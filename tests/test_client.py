@@ -44,7 +44,8 @@ class TestScrape:
             res = sgai.scrape(ScrapeRequest(url="https://example.com"))
 
             assert res.status == "success"
-            assert res.data == body
+            assert res.data.results == body["results"]
+            assert res.data.metadata.content_type == "text/html"
             assert res.elapsed_ms >= 0
 
             mock.assert_called_once()
@@ -127,8 +128,8 @@ class TestScrape:
             )
 
             assert res.status == "success"
-            assert res.data["results"]["markdown"] is not None
-            assert res.data["results"]["links"] is not None
+            assert res.data.results["markdown"] is not None
+            assert res.data.results["links"] is not None
 
     def test_json_format_with_schema(self):
         body = {
@@ -228,10 +229,15 @@ class TestExtract:
             )
 
             assert res.status == "success"
-            assert res.data["json"] == {"title": "Example"}
+            assert res.data.json_data == {"title": "Example"}
 
     def test_with_schema(self):
-        body = {"raw": None, "json": {"name": "Test"}, "usage": {}, "metadata": {}}
+        body = {
+            "raw": None,
+            "json": {"name": "Test"},
+            "usage": {"promptTokens": 10, "completionTokens": 5},
+            "metadata": {},
+        }
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.extract(
@@ -258,7 +264,7 @@ class TestSearch:
             res = sgai.search(SearchRequest(query="test query", num_results=5))
 
             assert res.status == "success"
-            assert len(res.data["results"]) == 1
+            assert len(res.data.results) == 1
 
     def test_with_extraction(self):
         body = {
@@ -294,7 +300,7 @@ class TestCrawl:
             )
 
             assert res.status == "success"
-            assert res.data["id"] == "crawl-123"
+            assert res.data.id == "crawl-123"
             _, kwargs = mock.call_args
             assert kwargs["json"]["maxPages"] == 10
             assert kwargs["json"]["maxDepth"] == 2
@@ -306,7 +312,7 @@ class TestCrawl:
             res = sgai.crawl.get("crawl-123")
 
             assert res.status == "success"
-            assert res.data["status"] == "completed"
+            assert res.data.status == "completed"
 
     def test_stop(self):
         with patch.object(httpx.Client, "request", return_value=mock_response({})):
@@ -343,20 +349,54 @@ class TestMonitor:
             )
 
             assert res.status == "success"
-            assert res.data["cronId"] == "mon-123"
+            assert res.data.cron_id == "mon-123"
 
     def test_list(self):
-        body = [{"cronId": "mon-1"}, {"cronId": "mon-2"}]
+        body = [
+            {
+                "cronId": "mon-1",
+                "scheduleId": "sch-1",
+                "interval": "0 * * * *",
+                "status": "active",
+                "config": {},
+                "createdAt": "2024-01-01T00:00:00Z",
+                "updatedAt": "2024-01-01T00:00:00Z",
+            },
+            {
+                "cronId": "mon-2",
+                "scheduleId": "sch-2",
+                "interval": "0 */2 * * *",
+                "status": "active",
+                "config": {},
+                "createdAt": "2024-01-01T00:00:00Z",
+                "updatedAt": "2024-01-01T00:00:00Z",
+            },
+        ]
         with patch.object(httpx.Client, "request", return_value=mock_response(body)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.monitor.list()
             assert res.status == "success"
+            assert len(res.data) == 2
+            assert res.data[0].cron_id == "mon-1"
+            assert res.data[1].cron_id == "mon-2"
 
 
 class TestHistory:
     def test_list(self):
         body = {
-            "data": [{"id": "req-1", "service": "scrape", "status": "completed"}],
+            "data": [
+                {
+                    "id": "req-1",
+                    "service": "scrape",
+                    "status": "completed",
+                    "error": None,
+                    "elapsedMs": 100,
+                    "createdAt": "2024-01-01T00:00:00Z",
+                    "requestParentId": None,
+                    "params": {},
+                    "result": {},
+                }
+            ],
             "pagination": {"page": 1, "limit": 20, "total": 100},
         }
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
@@ -364,10 +404,20 @@ class TestHistory:
             res = sgai.history.list(HistoryFilter(limit=5, service="scrape"))
 
             assert res.status == "success"
-            assert res.data["pagination"]["total"] == 100
+            assert res.data.pagination.total == 100
 
     def test_get(self):
-        body = {"id": "req-1", "service": "scrape", "status": "completed"}
+        body = {
+            "id": "req-1",
+            "service": "scrape",
+            "status": "completed",
+            "error": None,
+            "elapsedMs": 100,
+            "createdAt": "2024-01-01T00:00:00Z",
+            "requestParentId": None,
+            "params": {},
+            "result": {},
+        }
         with patch.object(httpx.Client, "request", return_value=mock_response(body)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.history.get("req-1")
@@ -387,8 +437,8 @@ class TestCreditsAndHealth:
             res = sgai.credits()
 
             assert res.status == "success"
-            assert res.data["remaining"] == 1000
-            assert res.data["plan"] == "pro"
+            assert res.data.remaining == 1000
+            assert res.data.plan == "pro"
 
     def test_health(self):
         body = {"status": "ok", "uptime": 12345}
@@ -397,7 +447,7 @@ class TestCreditsAndHealth:
             res = sgai.health()
 
             assert res.status == "success"
-            assert res.data["status"] == "ok"
+            assert res.data.status == "ok"
 
 
 class TestClientInit:

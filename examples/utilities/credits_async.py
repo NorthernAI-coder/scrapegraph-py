@@ -6,13 +6,12 @@ async def main():
         res = await sgai.credits()
 
         if res.status == "success":
-            data = res.data
-            print("Plan:", data["plan"])
-            print("Remaining credits:", data["remaining"])
-            print("Used credits:", data["used"])
+            print("Plan:", res.data.plan)
+            print("Remaining credits:", res.data.remaining)
+            print("Used credits:", res.data.used)
             print("\nJob limits:")
-            print("  Crawl:", data["jobs"]["crawl"]["used"], "/", data["jobs"]["crawl"]["limit"])
-            print("  Monitor:", data["jobs"]["monitor"]["used"], "/", data["jobs"]["monitor"]["limit"])
+            print("  Crawl:", res.data.jobs.crawl.used, "/", res.data.jobs.crawl.limit)
+            print("  Monitor:", res.data.jobs.monitor.used, "/", res.data.jobs.monitor.limit)
         else:
             print("Failed:", res.error)
 
