@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from scrapegraph_py import ScrapeGraphAI, MonitorCreateRequest, MarkdownFormatConfig
 
 sgai = ScrapeGraphAI()

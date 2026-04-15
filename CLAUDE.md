@@ -37,19 +37,30 @@ uv sync
 # Test
 uv run pytest tests/ -v
 
-# Format
-uv run black scrapegraph_py tests
-uv run isort scrapegraph_py tests
-
-# Lint
-uv run ruff check scrapegraph_py tests
+# Format & lint
+uv run ruff format src tests
+uv run ruff check src tests --fix
 
 # Type check
-uv run mypy scrapegraph_py
+uv run mypy src
 
 # Build
 uv build
 ```
+
+## Before completing any task
+
+Always run these commands before committing or saying a task is done:
+
+```bash
+uv run ruff format src tests
+uv run ruff check src tests --fix
+uv run mypy src
+uv build
+uv run pytest tests/ -v
+```
+
+No exceptions.
 
 ## Architecture
 

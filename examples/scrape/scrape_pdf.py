@@ -1,9 +1,12 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from scrapegraph_py import ScrapeGraphAI, ScrapeRequest, MarkdownFormatConfig
 
 sgai = ScrapeGraphAI()
 
 res = sgai.scrape(ScrapeRequest(
-    url="https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-word.pdf",
+    url="https://pdfobject.com/pdf/sample.pdf",
     content_type="application/pdf",
     formats=[MarkdownFormatConfig()],
 ))

@@ -232,7 +232,7 @@ class AsyncScrapeGraphAI:
         return await self._get("/credits", CreditsResponse)
 
     async def health(self) -> ApiResult[HealthResponse]:
-        return await self._request("GET", "/healthz", HealthResponse, base_url=env.health_url)
+        return await self._get("/health", HealthResponse)
 
     async def close(self) -> None:
         await self._http.aclose()

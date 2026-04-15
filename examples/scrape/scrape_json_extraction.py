@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import json
 from scrapegraph_py import ScrapeGraphAI, ScrapeRequest, JsonFormatConfig
 

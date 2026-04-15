@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+import time
 from scrapegraph_py import (
     ScrapeGraphAI,
     CrawlRequest,
@@ -8,7 +12,7 @@ from scrapegraph_py import (
 sgai = ScrapeGraphAI()
 
 start_res = sgai.crawl.start(CrawlRequest(
-    url="https://example.com",
+    url="https://scrapegraphai.com/",
     max_pages=3,
     max_depth=1,
     formats=[
@@ -22,13 +26,20 @@ if start_res.status != "success" or not start_res.data:
 else:
     crawl_id = start_res.data.id
     print("Crawl started:", crawl_id)
-    print("Status:", start_res.data.status)
 
-    get_res = sgai.crawl.get(crawl_id)
-    if get_res.status == "success":
-        print("\nProgress:", get_res.data.finished, "/", get_res.data.total)
+    status = start_res.data.status
+    while status == "running":
+        time.sleep(2)
+        get_res = sgai.crawl.get(crawl_id)
+        if get_res.status != "success" or not get_res.data:
+            print("Failed to get status:", get_res.error)
+            break
+        status = get_res.data.status
+        print(f"Progress: {get_res.data.finished}/{get_res.data.total} - {status}")
 
-        for page in get_res.data.get("pages", []):
-            print(f"\n  Page: {page['url']}")
-            print(f"  Status: {page['status']}")
-            print(f"  Depth: {page['depth']}")
+        if status in ("completed", "failed"):
+            print("\nPages crawled:")
+            for page in get_res.data.pages:
+                print(f"\n  Page: {page.url}")
+                print(f"  Status: {page.status}")
+                print(f"  Depth: {page.depth}")

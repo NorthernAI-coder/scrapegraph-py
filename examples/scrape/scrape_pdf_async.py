@@ -1,10 +1,13 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import asyncio
 from scrapegraph_py import AsyncScrapeGraphAI, ScrapeRequest, MarkdownFormatConfig
 
 async def main():
     async with AsyncScrapeGraphAI() as sgai:
         res = await sgai.scrape(ScrapeRequest(
-            url="https://www.w3.org/WAI/WCAG21/Techniques/pdf/img/table-word.pdf",
+            url="https://pdfobject.com/pdf/sample.pdf",
             content_type="application/pdf",
             formats=[MarkdownFormatConfig()],
         ))

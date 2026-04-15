@@ -232,7 +232,7 @@ class ScrapeGraphAI:
         return self._get("/credits", CreditsResponse)
 
     def health(self) -> ApiResult[HealthResponse]:
-        return self._request("GET", "/healthz", HealthResponse, base_url=env.health_url)
+        return self._get("/health", HealthResponse)
 
     def close(self) -> None:
         self._http.close()

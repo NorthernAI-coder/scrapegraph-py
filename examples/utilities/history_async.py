@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import asyncio
 from scrapegraph_py import AsyncScrapeGraphAI, HistoryFilter
 
@@ -7,15 +10,15 @@ async def main():
 
         if res.status == "success":
             data = res.data
-            print(f"Total: {data['pagination']['total']}")
-            print(f"Page: {data['pagination']['page']} / {(data['pagination']['total'] // data['pagination']['limit']) + 1}")
+            print(f"Total: {data.pagination.total}")
+            print(f"Page: {data.pagination.page} / {(data.pagination.total // data.pagination.limit) + 1}")
 
-            for entry in data["data"]:
-                print(f"\n  ID: {entry['id']}")
-                print(f"  Service: {entry['service']}")
-                print(f"  Status: {entry['status']}")
-                print(f"  Created: {entry['createdAt']}")
-                print(f"  Elapsed: {entry['elapsedMs']}ms")
+            for entry in data.data:
+                print(f"\n  ID: {entry.id}")
+                print(f"  Service: {entry.service}")
+                print(f"  Status: {entry.status}")
+                print(f"  Created: {entry.created_at}")
+                print(f"  Elapsed: {entry.elapsed_ms}ms")
         else:
             print("Failed:", res.error)
 
