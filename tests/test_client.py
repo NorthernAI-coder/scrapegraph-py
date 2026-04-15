@@ -442,7 +442,7 @@ class TestCreditsAndHealth:
 
     def test_health(self):
         body = {"status": "ok", "uptime": 12345}
-        with patch.object(httpx, "request", return_value=mock_response(body)):
+        with patch.object(httpx.Client, "request", return_value=mock_response(body)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.health()
 
