@@ -10,12 +10,12 @@ class Env:
 
     @property
     def timeout(self) -> int:
-        val = os.environ.get("SGAI_TIMEOUT_S")
+        val = os.environ.get("SGAI_TIMEOUT")
         return int(val) if val else 120
 
     @property
     def base_url(self) -> str:
-        return os.environ.get("SGAI_API_URL") or "https://api.scrapegraphai.com/v2"
+        return os.environ.get("SGAI_API_URL") or "https://api.scrapegraphai.com/api/v2"
 
 
 env = Env()
