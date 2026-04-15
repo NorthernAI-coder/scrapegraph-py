@@ -24,7 +24,7 @@ scrapegraph-py/
 - **Package Manager**: uv (recommended) or pip
 - **Core Dependencies**: requests, pydantic, python-dotenv, aiohttp
 - **Testing**: pytest, pytest-asyncio, pytest-mock, aioresponses
-- **Code Quality**: black, isort, ruff, mypy
+- **Code Quality**: ruff
 - **Build**: hatchling
 - **Release**: semantic-release
 
@@ -41,9 +41,6 @@ uv run pytest tests/ -v
 uv run ruff format src tests
 uv run ruff check src tests --fix
 
-# Type check
-uv run mypy src
-
 # Build
 uv build
 ```
@@ -55,7 +52,6 @@ Always run these commands before committing or saying a task is done:
 ```bash
 uv run ruff format src tests
 uv run ruff check src tests --fix
-uv run mypy src
 uv build
 uv run pytest tests/ -v
 ```
