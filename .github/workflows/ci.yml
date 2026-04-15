@@ -18,8 +18,12 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
-      - run: uv sync --frozen
+      - run: uv python install ${{ matrix.python }}
+      - run: uv sync --python ${{ matrix.python }}
       - run: uv run pytest tests/test_client.py -v
