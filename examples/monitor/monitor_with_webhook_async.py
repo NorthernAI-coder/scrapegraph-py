@@ -34,16 +34,24 @@ async def main():
         print("Webhook configured")
         print("\nPolling for activity (Ctrl+C to stop)...\n")
 
+        seen_ids = set()
+
         try:
             while True:
                 activity = await sgai.monitor.activity(monitor_id)
                 if activity.status == "success" and activity.data:
                     for tick in activity.data.ticks:
+                        if tick.id in seen_ids:
+                            continue
+                        seen_ids.add(tick.id)
+
                         changes = "CHANGED" if tick.changed else "no change"
                         print(f"[{tick.created_at}] {tick.status} - {changes} ({tick.elapsed_ms}ms)")
                         diffs = tick.diffs.model_dump(exclude_none=True)
                         if diffs:
                             print(f"  Diffs: {json.dumps(diffs, indent=2)}")
+                        elif tick.changed:
+                            print("  (no diffs data)")
                 await asyncio.sleep(30)
         except asyncio.CancelledError:
             pass
