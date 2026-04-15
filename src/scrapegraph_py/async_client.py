@@ -115,9 +115,7 @@ class AsyncMonitorResource:
         self, id: str, params: MonitorActivityRequest | None = None
     ) -> ApiResult[MonitorActivityResponse]:
         p = params.model_dump(by_alias=True, exclude_none=True) if params else None
-        return await self._client._get(
-            f"/monitor/{id}/activity", MonitorActivityResponse, params=p
-        )
+        return await self._client._get(f"/monitor/{id}/activity", MonitorActivityResponse, params=p)
 
 
 class AsyncHistoryResource:
