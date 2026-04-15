@@ -403,6 +403,33 @@ class MonitorResponse(ResponseModel):
     model_config = ConfigDict(extra="allow")
 
 
+ApiMonitorTickStatus = Literal["completed", "failed", "paused", "running"]
+
+
+class MonitorTickEntry(ResponseModel):
+    id: str
+    status: ApiMonitorTickStatus
+    created_at: str
+    elapsed_ms: int
+    changed: bool
+    diffs: MonitorDiffs
+    error: str | None = None
+
+    model_config = ConfigDict(extra="allow")
+
+
+class MonitorActivityResponse(ResponseModel):
+    ticks: list[MonitorTickEntry]
+    next_cursor: str | None
+
+    model_config = ConfigDict(extra="allow")
+
+
+class MonitorActivityRequest(CamelModel):
+    limit: int = Field(default=20, ge=1, le=100)
+    cursor: str | None = None
+
+
 class HistoryEntry(ResponseModel):
     id: str
     service: ApiHistoryService
