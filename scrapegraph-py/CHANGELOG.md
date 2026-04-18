@@ -1,3 +1,33 @@
+## [1.47.0](https://github.com/ScrapeGraphAI/scrapegraph-py/compare/v1.46.0...v1.47.0) (2026-04-18)
+
+
+### Features
+
+* add location_geo_code parameter to SearchScraper ([c0cfb4f](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/c0cfb4fadc6d667746ae5c5b16ab6952cdfeb840)), closes [#384](https://github.com/ScrapeGraphAI/scrapegraph-py/issues/384)
+* add time_range parameter to SearchScraper ([2de9a89](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/2de9a89421e8b6d856a7497b7bf271e66980ff4f))
+* add wait_ms parameter to Crawler endpoint ([0a67ce5](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/0a67ce5dfc01e00ed2a4be6c0f0a642d294cedbc)), closes [sgai-api#402](https://github.com/ScrapeGraphAI/sgai-api/issues/402)
+* add wait_ms parameter to SmartScraper, Scrape, and Markdownify endpoints ([b9c0f56](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/b9c0f564b84f6909637d26c3c31777a56901f6f5)), closes [ScrapeGraphAI/sgai-api#399](https://github.com/ScrapeGraphAI/sgai-api/issues/399)
+
+
+### Bug Fixes
+
+* remove trailing comma on headers field in ScrapeRequest model ([c6aa423](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/c6aa423737a77fdc2a139d53039f2d0ba24b94d1))
+* resolve 51 pre-existing test failures across test suite ([6734836](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/6734836c787ad7b1baba56629051cf3df742e9a7))
+* trigger release workflow ([3b2f90f](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/3b2f90f3cf082576f61257b8ddc39c43206cbec1))
+* update deprecation notice URL to official docs ([0c58efb](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/0c58efb72e354730693b279a1beeb4ad4a066943))
+* **ci:** update repository URL to scrapegraph-py ([ed003c8](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/ed003c8c1e7d6ad780dd0c0280d04b28bbd049f5))
+
+
+### chore
+
+* add deprecation notice for v1.x and bump to 1.12.3 ([d105c85](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/d105c857379854246b9e696fa39640928e3aa807))
+* removed unused api ([7f78cf2](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/7f78cf2b3171e7c7649985a714741c00cf0e3b1b))
+
+
+### CI
+
+* reduce test matrix to Python 3.12 only and fix CI failures ([97c7898](https://github.com/ScrapeGraphAI/scrapegraph-py/commit/97c78983160d76227bdadec5c5db265fe3d56105))
+
 ## [1.46.0](https://github.com/ScrapeGraphAI/scrapegraph-sdk/compare/v1.45.0...v1.46.0) (2026-01-26)
 
 
