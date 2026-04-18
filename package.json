@@ -5,7 +5,7 @@
   "description": "ScrapeGraph SDK - Python SDK for ScrapeGraph AI API",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ScrapeGraphAI/scrapegraph-sdk.git"
+    "url": "https://github.com/ScrapeGraphAI/scrapegraph-py.git"
   },
   "author": "ScrapeGraphAI",
   "license": "MIT",
