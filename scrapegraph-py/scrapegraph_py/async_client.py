@@ -34,6 +34,7 @@ Example:
         >>> asyncio.run(main())
 """
 import asyncio
+import warnings
 from typing import Any, Dict, Optional, Callable
 
 from aiohttp import ClientSession, ClientTimeout, TCPConnector
@@ -172,6 +173,19 @@ class AsyncClient:
             retry_delay: Delay between retries in seconds
         """
         logger.info("🔑 Initializing AsyncClient")
+
+        warnings.warn(
+            "scrapegraph-py v1.x is deprecated and will be removed in a future release. "
+            "Please upgrade to scrapegraph-py v2.x for the new API surface. "
+            "See migration guide: https://docs.scrapegraphai.com/transition-from-v1-to-v2",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        logger.warning(
+            "scrapegraph-py v1.x is deprecated and will be removed in a future release. "
+            "Please upgrade to scrapegraph-py v2.x for the new API surface. "
+            "Migration guide: https://docs.scrapegraphai.com/transition-from-v1-to-v2"
+        )
 
         # Try to get API key from environment if not provided
         if api_key is None:
