@@ -471,14 +471,8 @@ class CreditsResponse(ResponseModel):
     model_config = ConfigDict(extra="allow")
 
 
-class HealthServices(ResponseModel):
-    redis: Literal["ok", "down"]
-    db: Literal["ok", "down"]
-
-
 class HealthResponse(ResponseModel):
     status: str
     uptime: int
-    services: HealthServices | None = None
 
     model_config = ConfigDict(extra="allow")
