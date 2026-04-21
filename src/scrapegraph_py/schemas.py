@@ -120,7 +120,7 @@ class BrandingFormatConfig(CamelModel):
     type: Literal["branding"] = "branding"
 
 
-ScrapeFormatEntry = (
+FormatConfig = (
     MarkdownFormatConfig
     | HtmlFormatConfig
     | ScreenshotFormatConfig
@@ -136,7 +136,7 @@ class ScrapeRequest(CamelModel):
     url: HttpUrl
     content_type: ApiFetchContentType | None = None
     fetch_config: FetchConfig | None = None
-    formats: list[ScrapeFormatEntry] = Field(default_factory=lambda: [MarkdownFormatConfig()])
+    formats: list[FormatConfig] = Field(default_factory=lambda: [MarkdownFormatConfig()])
 
     @model_validator(mode="after")
     def validate_unique_formats(self):
@@ -184,7 +184,7 @@ class SearchRequest(CamelModel):
 class MonitorCreateRequest(CamelModel):
     url: HttpUrl
     name: Annotated[str, Field(max_length=200)] | None = None
-    formats: list[ScrapeFormatEntry] = Field(default_factory=lambda: [MarkdownFormatConfig()])
+    formats: list[FormatConfig] = Field(default_factory=lambda: [MarkdownFormatConfig()])
     webhook_url: HttpUrl | None = None
     interval: Annotated[str, Field(min_length=1, max_length=100)]
     fetch_config: FetchConfig | None = None
@@ -199,7 +199,7 @@ class MonitorCreateRequest(CamelModel):
 
 class MonitorUpdateRequest(CamelModel):
     name: Annotated[str, Field(max_length=200)] | None = None
-    formats: list[ScrapeFormatEntry] | None = None
+    formats: list[FormatConfig] | None = None
     webhook_url: HttpUrl | None = None
     interval: Annotated[str, Field(min_length=1, max_length=100)] | None = None
     fetch_config: FetchConfig | None = None
@@ -215,7 +215,7 @@ class MonitorUpdateRequest(CamelModel):
 
 class CrawlRequest(CamelModel):
     url: HttpUrl
-    formats: list[ScrapeFormatEntry] = Field(default_factory=lambda: [MarkdownFormatConfig()])
+    formats: list[FormatConfig] = Field(default_factory=lambda: [MarkdownFormatConfig()])
     max_depth: int = Field(default=2, ge=0)
     max_pages: int = Field(default=50, ge=1, le=1000)
     max_links_per_page: int = Field(default=10, ge=1)
