@@ -5,7 +5,7 @@ description = "Official Python SDK for ScrapeGraph AI API"
 readme = "README.md"
 license = "MIT"
 authors = [
-    { name = "ScrapeGraph AI", email = "support@scrapegraphai.com" }
+    { name = "ScrapeGraph AI", email = "marco@scrapegraphai.com" }
 ]
 requires-python = ">=3.12"
 dependencies = [
