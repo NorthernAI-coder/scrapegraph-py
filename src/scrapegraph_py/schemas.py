@@ -472,7 +472,7 @@ class CreditsResponse(ResponseModel):
 
 
 class HealthResponse(ResponseModel):
-    status: str
+    status: Literal["ok", "degraded"]
     uptime: int
 
     model_config = ConfigDict(extra="allow")
