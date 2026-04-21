@@ -1,25 +1,27 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import asyncio
+
 from scrapegraph_py import (
     AsyncScrapeGraphAI,
-    ScrapeRequest,
-    MarkdownFormatConfig,
     LinksFormatConfig,
+    MarkdownFormatConfig,
     ScreenshotFormatConfig,
 )
 
+
 async def main():
     async with AsyncScrapeGraphAI() as sgai:
-        res = await sgai.scrape(ScrapeRequest(
-            url="https://example.com",
+        res = await sgai.scrape(
+            "https://example.com",
             formats=[
                 MarkdownFormatConfig(),
                 LinksFormatConfig(),
                 ScreenshotFormatConfig(width=1280, height=720),
             ],
-        ))
+        )
 
         if res.status == "success":
             results = res.data.results
@@ -39,5 +41,6 @@ async def main():
             print(f"Size: {screenshot.get('width')}x{screenshot.get('height')}")
         else:
             print("Failed:", res.error)
+
 
 asyncio.run(main())

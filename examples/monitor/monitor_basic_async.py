@@ -1,27 +1,32 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import asyncio
 import json
-from scrapegraph_py import AsyncScrapeGraphAI, MonitorCreateRequest, JsonFormatConfig
+
+from scrapegraph_py import AsyncScrapeGraphAI, JsonFormatConfig
+
 
 async def main():
     async with AsyncScrapeGraphAI() as sgai:
-        res = await sgai.monitor.create(MonitorCreateRequest(
-            url="https://time.is/",
+        res = await sgai.monitor.create(
+            "https://time.is/",
+            "*/10 * * * *",
             name="Time Monitor",
-            interval="*/10 * * * *",
-            formats=[JsonFormatConfig(
-                prompt="Extract the current time",
-                schema={
-                    "type": "object",
-                    "properties": {
-                        "time": {"type": "string"},
+            formats=[
+                JsonFormatConfig(
+                    prompt="Extract the current time",
+                    schema={
+                        "type": "object",
+                        "properties": {
+                            "time": {"type": "string"},
+                        },
+                        "required": ["time"],
                     },
-                    "required": ["time"],
-                },
-            )],
-        ))
+                )
+            ],
+        )
 
         if res.status != "success" or not res.data:
             print("Failed to create monitor:", res.error)
@@ -44,7 +49,9 @@ async def main():
                         seen_ids.add(tick.id)
 
                         changes = "CHANGED" if tick.changed else "no change"
-                        print(f"[{tick.created_at}] {tick.status} - {changes} ({tick.elapsed_ms}ms)")
+                        print(
+                            f"[{tick.created_at}] {tick.status} - {changes} ({tick.elapsed_ms}ms)"
+                        )
                         diffs = tick.diffs.model_dump(exclude_none=True)
                         if diffs:
                             print(f"  Diffs: {json.dumps(diffs, indent=2)}")
@@ -57,5 +64,6 @@ async def main():
         print("\nStopping monitor...")
         await sgai.monitor.delete(monitor_id)
         print("Monitor deleted")
+
 
 asyncio.run(main())

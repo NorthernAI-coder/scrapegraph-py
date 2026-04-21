@@ -1,16 +1,19 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import asyncio
-from scrapegraph_py import AsyncScrapeGraphAI, CrawlRequest
+
+from scrapegraph_py import AsyncScrapeGraphAI
+
 
 async def main():
     async with AsyncScrapeGraphAI() as sgai:
-        start_res = await sgai.crawl.start(CrawlRequest(
-            url="https://scrapegraphai.com/",
+        start_res = await sgai.crawl.start(
+            "https://scrapegraphai.com/",
             max_pages=5,
             max_depth=2,
-        ))
+        )
 
         if start_res.status != "success" or not start_res.data:
             print("Failed to start:", start_res.error)
@@ -32,5 +35,6 @@ async def main():
                     print("\nPages crawled:")
                     for page in get_res.data.pages:
                         print(f"  {page.url} - {page.status}")
+
 
 asyncio.run(main())

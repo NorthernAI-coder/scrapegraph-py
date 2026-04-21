@@ -45,3 +45,4 @@ htmlcov/
 
 # Misc
 .bfg-report/
+playground.py

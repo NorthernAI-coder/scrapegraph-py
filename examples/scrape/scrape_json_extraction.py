@@ -1,13 +1,15 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import json
-from scrapegraph_py import ScrapeGraphAI, ScrapeRequest, JsonFormatConfig
+
+from scrapegraph_py import JsonFormatConfig, ScrapeGraphAI
 
 sgai = ScrapeGraphAI()
 
-res = sgai.scrape(ScrapeRequest(
-    url="https://example.com",
+res = sgai.scrape(
+    "https://example.com",
     formats=[
         JsonFormatConfig(
             prompt="Extract the company name, tagline, and list of features",
@@ -25,7 +27,7 @@ res = sgai.scrape(ScrapeRequest(
             },
         ),
     ],
-))
+)
 
 if res.status == "success":
     json_result = res.data.results.get("json", {})

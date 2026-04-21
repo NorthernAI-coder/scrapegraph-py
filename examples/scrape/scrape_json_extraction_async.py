@@ -1,14 +1,17 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import asyncio
 import json
-from scrapegraph_py import AsyncScrapeGraphAI, ScrapeRequest, JsonFormatConfig
+
+from scrapegraph_py import AsyncScrapeGraphAI, JsonFormatConfig
+
 
 async def main():
     async with AsyncScrapeGraphAI() as sgai:
-        res = await sgai.scrape(ScrapeRequest(
-            url="https://example.com",
+        res = await sgai.scrape(
+            "https://example.com",
             formats=[
                 JsonFormatConfig(
                     prompt="Extract the company name, tagline, and list of features",
@@ -26,7 +29,7 @@ async def main():
                     },
                 ),
             ],
-        ))
+        )
 
         if res.status == "success":
             json_result = res.data.results.get("json", {})
@@ -43,5 +46,6 @@ async def main():
                 print("  Total size:", sum(c.get("size", 0) for c in chunks), "chars")
         else:
             print("Failed:", res.error)
+
 
 asyncio.run(main())

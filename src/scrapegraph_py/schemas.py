@@ -16,20 +16,15 @@ class ResponseModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True, extra="allow")
 
 
-ApiService = Literal["scrape", "extract", "search", "monitor", "crawl"]
-ApiStatus = Literal["completed", "failed"]
-ApiHtmlMode = Literal["normal", "reader", "prune"]
-ApiFetchMode = Literal["auto", "fast", "js"]
-ApiScrapeFormat = Literal[
-    "markdown", "html", "links", "images", "summary", "json", "branding", "screenshot"
-]
-ApiTimeRange = Literal["past_hour", "past_24_hours", "past_week", "past_month", "past_year"]
-ApiCrawlStatus = Literal["running", "completed", "failed", "paused", "deleted"]
-ApiCrawlPageStatus = Literal["completed", "failed", "skipped"]
-ApiHistoryService = Literal["scrape", "extract", "search", "monitor", "crawl"]
-ApiHistoryStatus = Literal["completed", "failed", "running", "paused", "deleted"]
+Service = Literal["scrape", "extract", "search", "monitor", "crawl"]
+HtmlMode = Literal["normal", "reader", "prune"]
+FetchMode = Literal["auto", "fast", "js"]
+TimeRange = Literal["past_hour", "past_24_hours", "past_week", "past_month", "past_year"]
+CrawlStatus = Literal["running", "completed", "failed", "paused", "deleted"]
+CrawlPageStatus = Literal["completed", "failed", "skipped"]
+HistoryStatus = Literal["completed", "failed", "running", "paused", "deleted"]
 
-ApiFetchContentType = Literal[
+FetchContentType = Literal[
     "text/html",
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -68,7 +63,7 @@ class MockConfig(CamelModel):
 
 
 class FetchConfig(CamelModel):
-    mode: ApiFetchMode = "auto"
+    mode: FetchMode = "auto"
     stealth: bool = False
     timeout: int = Field(default=30000, ge=1000, le=60000)
     wait: int = Field(default=0, ge=0, le=30000)
@@ -81,12 +76,12 @@ class FetchConfig(CamelModel):
 
 class MarkdownFormatConfig(CamelModel):
     type: Literal["markdown"] = "markdown"
-    mode: ApiHtmlMode = "normal"
+    mode: HtmlMode = "normal"
 
 
 class HtmlFormatConfig(CamelModel):
     type: Literal["html"] = "html"
-    mode: ApiHtmlMode = "normal"
+    mode: HtmlMode = "normal"
 
 
 class ScreenshotFormatConfig(CamelModel):
@@ -101,7 +96,7 @@ class JsonFormatConfig(CamelModel):
     type: Literal["json"] = "json"
     prompt: Annotated[str, Field(min_length=1, max_length=10000)]
     schema_: dict[str, object] | None = Field(default=None, alias="schema")
-    mode: ApiHtmlMode = "normal"
+    mode: HtmlMode = "normal"
 
 
 class LinksFormatConfig(CamelModel):
@@ -120,7 +115,7 @@ class BrandingFormatConfig(CamelModel):
     type: Literal["branding"] = "branding"
 
 
-ScrapeFormatEntry = (
+FormatConfig = (
     MarkdownFormatConfig
     | HtmlFormatConfig
     | ScreenshotFormatConfig
@@ -134,9 +129,9 @@ ScrapeFormatEntry = (
 
 class ScrapeRequest(CamelModel):
     url: HttpUrl
-    content_type: ApiFetchContentType | None = None
+    content_type: FetchContentType | None = None
     fetch_config: FetchConfig | None = None
-    formats: list[ScrapeFormatEntry] = Field(default_factory=lambda: [MarkdownFormatConfig()])
+    formats: list[FormatConfig] = Field(default_factory=lambda: [MarkdownFormatConfig()])
 
     @model_validator(mode="after")
     def validate_unique_formats(self):
@@ -150,10 +145,10 @@ class ExtractRequest(CamelModel):
     url: HttpUrl | None = None
     html: str | None = None
     markdown: str | None = None
-    mode: ApiHtmlMode = "normal"
+    mode: HtmlMode = "normal"
     prompt: Annotated[str, Field(min_length=1, max_length=10000)]
     schema_: dict[str, object] | None = Field(default=None, alias="schema")
-    content_type: ApiFetchContentType | None = None
+    content_type: FetchContentType | None = None
     fetch_config: FetchConfig | None = None
 
     @model_validator(mode="after")
@@ -167,12 +162,12 @@ class SearchRequest(CamelModel):
     query: Annotated[str, Field(min_length=1, max_length=500)]
     num_results: int = Field(default=3, ge=1, le=20)
     format: Literal["html", "markdown"] = "markdown"
-    mode: ApiHtmlMode = "prune"
+    mode: HtmlMode = "prune"
     fetch_config: FetchConfig | None = None
     prompt: Annotated[str, Field(min_length=1, max_length=10000)] | None = None
     schema_: dict[str, object] | None = Field(default=None, alias="schema")
     location_geo_code: Annotated[str, Field(max_length=10)] | None = None
-    time_range: ApiTimeRange | None = None
+    time_range: TimeRange | None = None
 
     @model_validator(mode="after")
     def validate_schema_requires_prompt(self):
@@ -184,7 +179,7 @@ class SearchRequest(CamelModel):
 class MonitorCreateRequest(CamelModel):
     url: HttpUrl
     name: Annotated[str, Field(max_length=200)] | None = None
-    formats: list[ScrapeFormatEntry] = Field(default_factory=lambda: [MarkdownFormatConfig()])
+    formats: list[FormatConfig] = Field(default_factory=lambda: [MarkdownFormatConfig()])
     webhook_url: HttpUrl | None = None
     interval: Annotated[str, Field(min_length=1, max_length=100)]
     fetch_config: FetchConfig | None = None
@@ -199,7 +194,7 @@ class MonitorCreateRequest(CamelModel):
 
 class MonitorUpdateRequest(CamelModel):
     name: Annotated[str, Field(max_length=200)] | None = None
-    formats: list[ScrapeFormatEntry] | None = None
+    formats: list[FormatConfig] | None = None
     webhook_url: HttpUrl | None = None
     interval: Annotated[str, Field(min_length=1, max_length=100)] | None = None
     fetch_config: FetchConfig | None = None
@@ -215,14 +210,14 @@ class MonitorUpdateRequest(CamelModel):
 
 class CrawlRequest(CamelModel):
     url: HttpUrl
-    formats: list[ScrapeFormatEntry] = Field(default_factory=lambda: [MarkdownFormatConfig()])
+    formats: list[FormatConfig] = Field(default_factory=lambda: [MarkdownFormatConfig()])
     max_depth: int = Field(default=2, ge=0)
     max_pages: int = Field(default=50, ge=1, le=1000)
     max_links_per_page: int = Field(default=10, ge=1)
     allow_external: bool = False
     include_patterns: list[str] | None = None
     exclude_patterns: list[str] | None = None
-    content_types: list[ApiFetchContentType] | None = None
+    content_types: list[FetchContentType] | None = None
     fetch_config: FetchConfig | None = None
 
     @model_validator(mode="after")
@@ -236,7 +231,7 @@ class CrawlRequest(CamelModel):
 class HistoryFilter(CamelModel):
     page: int = Field(default=1, ge=1)
     limit: int = Field(default=20, ge=1, le=100)
-    service: ApiService | None = None
+    service: Service | None = None
 
 
 class TokenUsage(ResponseModel):
@@ -315,7 +310,7 @@ class SearchResponse(ResponseModel):
 
 class CrawlPage(ResponseModel):
     url: str
-    status: ApiCrawlPageStatus
+    status: CrawlPageStatus
     depth: int
     parent_url: str | None
     links: list[str]
@@ -331,7 +326,7 @@ class CrawlPage(ResponseModel):
 
 class CrawlResponse(ResponseModel):
     id: str
-    status: ApiCrawlStatus
+    status: CrawlStatus
     reason: str | None = None
     total: int
     finished: int
@@ -403,12 +398,12 @@ class MonitorResponse(ResponseModel):
     model_config = ConfigDict(extra="allow")
 
 
-ApiMonitorTickStatus = Literal["completed", "failed", "paused", "running"]
+MonitorTickStatus = Literal["completed", "failed", "paused", "running"]
 
 
 class MonitorTickEntry(ResponseModel):
     id: str
-    status: ApiMonitorTickStatus
+    status: MonitorTickStatus
     created_at: str
     elapsed_ms: int
     changed: bool
@@ -432,8 +427,8 @@ class MonitorActivityRequest(CamelModel):
 
 class HistoryEntry(ResponseModel):
     id: str
-    service: ApiHistoryService
-    status: ApiHistoryStatus
+    service: Service
+    status: HistoryStatus
     error: object | None
     elapsed_ms: int
     created_at: str
