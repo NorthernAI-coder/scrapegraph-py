@@ -13,22 +13,20 @@ from pydantic import BaseModel, TypeAdapter
 
 from .env import env
 from .schemas import (
-    ApiFetchContentType,
-    ApiHtmlMode,
     ApiResult,
-    ApiService,
-    ApiTimeRange,
     CrawlRequest,
     CrawlResponse,
     CreditsResponse,
     ExtractRequest,
     ExtractResponse,
     FetchConfig,
+    FetchContentType,
     FormatConfig,
     HealthResponse,
     HistoryEntry,
     HistoryFilter,
     HistoryPage,
+    HtmlMode,
     MonitorActivityRequest,
     MonitorActivityResponse,
     MonitorCreateRequest,
@@ -38,6 +36,8 @@ from .schemas import (
     ScrapeResponse,
     SearchRequest,
     SearchResponse,
+    Service,
+    TimeRange,
 )
 
 _SERVER_TIMING_RE = re.compile(r"dur=(\d+(?:\.\d+)?)")
@@ -94,7 +94,7 @@ class CrawlResource:
         allow_external: bool | None = None,
         include_patterns: list[str] | None = None,
         exclude_patterns: list[str] | None = None,
-        content_types: list[ApiFetchContentType] | None = None,
+        content_types: list[FetchContentType] | None = None,
         fetch_config: FetchConfig | None = None,
     ) -> ApiResult[CrawlResponse]:
         req = CrawlRequest(
@@ -217,7 +217,7 @@ class HistoryResource:
         *,
         page: int | None = None,
         limit: int | None = None,
-        service: ApiService | None = None,
+        service: Service | None = None,
     ) -> ApiResult[HistoryPage]:
         kwargs = _compact(page=page, limit=limit, service=service)
         if not kwargs:
@@ -332,7 +332,7 @@ class ScrapeGraphAI:
         *,
         formats: list[FormatConfig] | None = None,
         fetch_config: FetchConfig | None = None,
-        content_type: ApiFetchContentType | None = None,
+        content_type: FetchContentType | None = None,
     ) -> ApiResult[ScrapeResponse]:
         req = ScrapeRequest(
             **_compact(
@@ -352,9 +352,9 @@ class ScrapeGraphAI:
         html: str | None = None,
         markdown: str | None = None,
         schema: dict[str, object] | None = None,
-        mode: ApiHtmlMode | None = None,
+        mode: HtmlMode | None = None,
         fetch_config: FetchConfig | None = None,
-        content_type: ApiFetchContentType | None = None,
+        content_type: FetchContentType | None = None,
     ) -> ApiResult[ExtractResponse]:
         req = ExtractRequest(
             **_compact(
@@ -376,12 +376,12 @@ class ScrapeGraphAI:
         *,
         num_results: int | None = None,
         format: Literal["html", "markdown"] | None = None,
-        mode: ApiHtmlMode | None = None,
+        mode: HtmlMode | None = None,
         prompt: str | None = None,
         schema: dict[str, object] | None = None,
         fetch_config: FetchConfig | None = None,
         location_geo_code: str | None = None,
-        time_range: ApiTimeRange | None = None,
+        time_range: TimeRange | None = None,
     ) -> ApiResult[SearchResponse]:
         req = SearchRequest(
             **_compact(
