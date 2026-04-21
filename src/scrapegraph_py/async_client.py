@@ -6,18 +6,24 @@ import re
 import sys
 import time
 from datetime import datetime
+from typing import Literal
 
 import httpx
 from pydantic import BaseModel, TypeAdapter
 
 from .env import env
 from .schemas import (
+    ApiFetchContentType,
+    ApiHtmlMode,
     ApiResult,
+    ApiService,
+    ApiTimeRange,
     CrawlRequest,
     CrawlResponse,
     CreditsResponse,
     ExtractRequest,
     ExtractResponse,
+    FetchConfig,
     HealthResponse,
     HistoryEntry,
     HistoryFilter,
@@ -27,6 +33,7 @@ from .schemas import (
     MonitorCreateRequest,
     MonitorResponse,
     MonitorUpdateRequest,
+    ScrapeFormatEntry,
     ScrapeRequest,
     ScrapeResponse,
     SearchRequest,
@@ -66,12 +73,45 @@ def _serialize(model: BaseModel) -> dict:
     return model.model_dump(mode="json", exclude_none=True, by_alias=True)
 
 
+# Strips None kwargs so Pydantic fields with non-None defaults (formats, max_depth, etc.)
+# fall back to their defaults instead of raising a ValidationError on None.
+def _compact(**kwargs) -> dict:
+    return {k: v for k, v in kwargs.items() if v is not None}
+
+
 class AsyncCrawlResource:
     def __init__(self, client: AsyncScrapeGraphAI):
         self._client = client
 
-    async def start(self, params: CrawlRequest) -> ApiResult[CrawlResponse]:
-        return await self._client._post("/crawl", params, CrawlResponse)
+    async def start(
+        self,
+        url: str,
+        *,
+        formats: list[ScrapeFormatEntry] | None = None,
+        max_depth: int | None = None,
+        max_pages: int | None = None,
+        max_links_per_page: int | None = None,
+        allow_external: bool | None = None,
+        include_patterns: list[str] | None = None,
+        exclude_patterns: list[str] | None = None,
+        content_types: list[ApiFetchContentType] | None = None,
+        fetch_config: FetchConfig | None = None,
+    ) -> ApiResult[CrawlResponse]:
+        req = CrawlRequest(
+            **_compact(
+                url=url,
+                formats=formats,
+                max_depth=max_depth,
+                max_pages=max_pages,
+                max_links_per_page=max_links_per_page,
+                allow_external=allow_external,
+                include_patterns=include_patterns,
+                exclude_patterns=exclude_patterns,
+                content_types=content_types,
+                fetch_config=fetch_config,
+            )
+        )
+        return await self._client._post("/crawl", req, CrawlResponse)
 
     async def get(self, id: str) -> ApiResult[CrawlResponse]:
         return await self._client._get(f"/crawl/{id}", CrawlResponse)
@@ -90,8 +130,27 @@ class AsyncMonitorResource:
     def __init__(self, client: AsyncScrapeGraphAI):
         self._client = client
 
-    async def create(self, params: MonitorCreateRequest) -> ApiResult[MonitorResponse]:
-        return await self._client._post("/monitor", params, MonitorResponse)
+    async def create(
+        self,
+        url: str,
+        interval: str,
+        *,
+        name: str | None = None,
+        formats: list[ScrapeFormatEntry] | None = None,
+        webhook_url: str | None = None,
+        fetch_config: FetchConfig | None = None,
+    ) -> ApiResult[MonitorResponse]:
+        req = MonitorCreateRequest(
+            **_compact(
+                url=url,
+                interval=interval,
+                name=name,
+                formats=formats,
+                webhook_url=webhook_url,
+                fetch_config=fetch_config,
+            )
+        )
+        return await self._client._post("/monitor", req, MonitorResponse)
 
     async def list(self) -> ApiResult[list[MonitorResponse]]:
         return await self._client._get("/monitor", list[MonitorResponse])
@@ -99,8 +158,26 @@ class AsyncMonitorResource:
     async def get(self, id: str) -> ApiResult[MonitorResponse]:
         return await self._client._get(f"/monitor/{id}", MonitorResponse)
 
-    async def update(self, id: str, params: MonitorUpdateRequest) -> ApiResult[MonitorResponse]:
-        return await self._client._patch(f"/monitor/{id}", params, MonitorResponse)
+    async def update(
+        self,
+        id: str,
+        *,
+        name: str | None = None,
+        formats: list[ScrapeFormatEntry] | None = None,
+        webhook_url: str | None = None,
+        interval: str | None = None,
+        fetch_config: FetchConfig | None = None,
+    ) -> ApiResult[MonitorResponse]:
+        req = MonitorUpdateRequest(
+            **_compact(
+                name=name,
+                formats=formats,
+                webhook_url=webhook_url,
+                interval=interval,
+                fetch_config=fetch_config,
+            )
+        )
+        return await self._client._patch(f"/monitor/{id}", req, MonitorResponse)
 
     async def delete(self, id: str) -> ApiResult[dict]:
         return await self._client._delete(f"/monitor/{id}")
@@ -112,26 +189,48 @@ class AsyncMonitorResource:
         return await self._client._post_empty(f"/monitor/{id}/resume", MonitorResponse)
 
     async def activity(
-        self, id: str, params: MonitorActivityRequest | None = None
+        self,
+        id: str,
+        *,
+        limit: int | None = None,
+        cursor: str | None = None,
     ) -> ApiResult[MonitorActivityResponse]:
-        p = params.model_dump(by_alias=True, exclude_none=True) if params else None
-        return await self._client._get(f"/monitor/{id}/activity", MonitorActivityResponse, params=p)
+        kwargs = _compact(limit=limit, cursor=cursor)
+        qs = (
+            MonitorActivityRequest(**kwargs).model_dump(
+                by_alias=True, exclude_none=True, exclude_defaults=True
+            )
+            if kwargs
+            else None
+        )
+        return await self._client._get(
+            f"/monitor/{id}/activity", MonitorActivityResponse, params=qs or None
+        )
 
 
 class AsyncHistoryResource:
     def __init__(self, client: AsyncScrapeGraphAI):
         self._client = client
 
-    async def list(self, params: HistoryFilter | None = None) -> ApiResult[HistoryPage]:
-        qs = {}
-        if params:
-            if params.page:
-                qs["page"] = str(params.page)
-            if params.limit:
-                qs["limit"] = str(params.limit)
-            if params.service:
-                qs["service"] = params.service
-        return await self._client._get("/history", HistoryPage, params=qs if qs else None)
+    async def list(
+        self,
+        *,
+        page: int | None = None,
+        limit: int | None = None,
+        service: ApiService | None = None,
+    ) -> ApiResult[HistoryPage]:
+        kwargs = _compact(page=page, limit=limit, service=service)
+        if not kwargs:
+            return await self._client._get("/history", HistoryPage)
+        params = HistoryFilter(**kwargs)
+        qs: dict[str, str] = {}
+        if page is not None:
+            qs["page"] = str(params.page)
+        if limit is not None:
+            qs["limit"] = str(params.limit)
+        if service is not None:
+            qs["service"] = params.service
+        return await self._client._get("/history", HistoryPage, params=qs or None)
 
     async def get(self, id: str) -> ApiResult[HistoryEntry]:
         return await self._client._get(f"/history/{id}", HistoryEntry)
@@ -227,14 +326,77 @@ class AsyncScrapeGraphAI:
     async def _delete(self, path: str) -> ApiResult[dict]:
         return await self._request("DELETE", path, dict)
 
-    async def scrape(self, params: ScrapeRequest) -> ApiResult[ScrapeResponse]:
-        return await self._post("/scrape", params, ScrapeResponse)
+    async def scrape(
+        self,
+        url: str,
+        *,
+        formats: list[ScrapeFormatEntry] | None = None,
+        fetch_config: FetchConfig | None = None,
+        content_type: ApiFetchContentType | None = None,
+    ) -> ApiResult[ScrapeResponse]:
+        req = ScrapeRequest(
+            **_compact(
+                url=url,
+                formats=formats,
+                fetch_config=fetch_config,
+                content_type=content_type,
+            )
+        )
+        return await self._post("/scrape", req, ScrapeResponse)
 
-    async def extract(self, params: ExtractRequest) -> ApiResult[ExtractResponse]:
-        return await self._post("/extract", params, ExtractResponse)
+    async def extract(
+        self,
+        prompt: str,
+        *,
+        url: str | None = None,
+        html: str | None = None,
+        markdown: str | None = None,
+        schema: dict[str, object] | None = None,
+        mode: ApiHtmlMode | None = None,
+        fetch_config: FetchConfig | None = None,
+        content_type: ApiFetchContentType | None = None,
+    ) -> ApiResult[ExtractResponse]:
+        req = ExtractRequest(
+            **_compact(
+                prompt=prompt,
+                url=url,
+                html=html,
+                markdown=markdown,
+                schema=schema,
+                mode=mode,
+                fetch_config=fetch_config,
+                content_type=content_type,
+            )
+        )
+        return await self._post("/extract", req, ExtractResponse)
 
-    async def search(self, params: SearchRequest) -> ApiResult[SearchResponse]:
-        return await self._post("/search", params, SearchResponse)
+    async def search(
+        self,
+        query: str,
+        *,
+        num_results: int | None = None,
+        format: Literal["html", "markdown"] | None = None,
+        mode: ApiHtmlMode | None = None,
+        prompt: str | None = None,
+        schema: dict[str, object] | None = None,
+        fetch_config: FetchConfig | None = None,
+        location_geo_code: str | None = None,
+        time_range: ApiTimeRange | None = None,
+    ) -> ApiResult[SearchResponse]:
+        req = SearchRequest(
+            **_compact(
+                query=query,
+                num_results=num_results,
+                format=format,
+                mode=mode,
+                prompt=prompt,
+                schema=schema,
+                fetch_config=fetch_config,
+                location_geo_code=location_geo_code,
+                time_range=time_range,
+            )
+        )
+        return await self._post("/search", req, SearchResponse)
 
     async def credits(self) -> ApiResult[CreditsResponse]:
         return await self._get("/credits", CreditsResponse)

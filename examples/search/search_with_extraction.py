@@ -1,13 +1,15 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import json
-from scrapegraph_py import ScrapeGraphAI, SearchRequest
+
+from scrapegraph_py import ScrapeGraphAI
 
 sgai = ScrapeGraphAI()
 
-res = sgai.search(SearchRequest(
-    query="best programming languages 2024",
+res = sgai.search(
+    "best programming languages 2024",
     num_results=3,
     prompt="Summarize the top programming languages mentioned and why they are recommended",
     schema={
@@ -25,7 +27,7 @@ res = sgai.search(SearchRequest(
             },
         },
     },
-))
+)
 
 if res.status == "success":
     print("=== Search Results ===")

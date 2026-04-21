@@ -1,24 +1,24 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from scrapegraph_py import (
-    ScrapeGraphAI,
-    ScrapeRequest,
-    MarkdownFormatConfig,
     LinksFormatConfig,
+    MarkdownFormatConfig,
+    ScrapeGraphAI,
     ScreenshotFormatConfig,
 )
 
 sgai = ScrapeGraphAI()
 
-res = sgai.scrape(ScrapeRequest(
-    url="https://example.com",
+res = sgai.scrape(
+    "https://example.com",
     formats=[
         MarkdownFormatConfig(),
         LinksFormatConfig(),
         ScreenshotFormatConfig(width=1280, height=720),
     ],
-))
+)
 
 if res.status == "success":
     results = res.data.results

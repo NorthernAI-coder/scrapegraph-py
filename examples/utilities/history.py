@@ -1,11 +1,12 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
-from scrapegraph_py import ScrapeGraphAI, HistoryFilter
+from scrapegraph_py import ScrapeGraphAI
 
 sgai = ScrapeGraphAI()
 
-res = sgai.history.list(HistoryFilter(limit=5))
+res = sgai.history.list(limit=5)
 
 if res.status == "success":
     data = res.data

@@ -4,20 +4,14 @@ import httpx
 import pytest
 
 from scrapegraph_py import (
-    CrawlRequest,
-    ExtractRequest,
     FetchConfig,
-    HistoryFilter,
     HtmlFormatConfig,
     ImagesFormatConfig,
     JsonFormatConfig,
     LinksFormatConfig,
     MarkdownFormatConfig,
-    MonitorCreateRequest,
     ScrapeGraphAI,
-    ScrapeRequest,
     ScreenshotFormatConfig,
-    SearchRequest,
 )
 
 API_KEY = "test-sgai-key"
@@ -41,7 +35,7 @@ class TestScrape:
         }
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
-            res = sgai.scrape(ScrapeRequest(url="https://example.com"))
+            res = sgai.scrape("https://example.com")
 
             assert res.status == "success"
             assert res.data.results == body["results"]
@@ -60,17 +54,15 @@ class TestScrape:
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.scrape(
-                ScrapeRequest(
-                    url="https://example.com",
-                    fetch_config=FetchConfig(
-                        mode="js",
-                        stealth=True,
-                        timeout=45000,
-                        wait=2000,
-                        scrolls=3,
-                    ),
-                    formats=[MarkdownFormatConfig()],
-                )
+                "https://example.com",
+                fetch_config=FetchConfig(
+                    mode="js",
+                    stealth=True,
+                    timeout=45000,
+                    wait=2000,
+                    scrolls=3,
+                ),
+                formats=[MarkdownFormatConfig()],
             )
 
             assert res.status == "success"
@@ -87,15 +79,13 @@ class TestScrape:
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.scrape(
-                ScrapeRequest(
-                    url="https://example.com",
-                    fetch_config=FetchConfig(
-                        mode="fast",
-                        headers={"X-Custom": "test"},
-                        cookies={"session": "abc123"},
-                    ),
-                    formats=[HtmlFormatConfig()],
-                )
+                "https://example.com",
+                fetch_config=FetchConfig(
+                    mode="fast",
+                    headers={"X-Custom": "test"},
+                    cookies={"session": "abc123"},
+                ),
+                formats=[HtmlFormatConfig()],
             )
 
             assert res.status == "success"
@@ -113,18 +103,16 @@ class TestScrape:
             },
             "metadata": {"contentType": "text/html"},
         }
-        with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
+        with patch.object(httpx.Client, "request", return_value=mock_response(body)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.scrape(
-                ScrapeRequest(
-                    url="https://example.com",
-                    formats=[
-                        MarkdownFormatConfig(mode="reader"),
-                        HtmlFormatConfig(mode="prune"),
-                        LinksFormatConfig(),
-                        ImagesFormatConfig(),
-                    ],
-                )
+                "https://example.com",
+                formats=[
+                    MarkdownFormatConfig(mode="reader"),
+                    HtmlFormatConfig(mode="prune"),
+                    LinksFormatConfig(),
+                    ImagesFormatConfig(),
+                ],
             )
 
             assert res.status == "success"
@@ -141,15 +129,13 @@ class TestScrape:
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.scrape(
-                ScrapeRequest(
-                    url="https://example.com",
-                    formats=[
-                        JsonFormatConfig(
-                            prompt="Extract product info",
-                            schema={"type": "object", "properties": {"title": {"type": "string"}}},
-                        ),
-                    ],
-                )
+                "https://example.com",
+                formats=[
+                    JsonFormatConfig(
+                        prompt="Extract product info",
+                        schema={"type": "object", "properties": {"title": {"type": "string"}}},
+                    ),
+                ],
             )
 
             assert res.status == "success"
@@ -165,10 +151,8 @@ class TestScrape:
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.scrape(
-                ScrapeRequest(
-                    url="https://example.com",
-                    formats=[ScreenshotFormatConfig(full_page=True, width=1920, height=1080)],
-                )
+                "https://example.com",
+                formats=[ScreenshotFormatConfig(full_page=True, width=1920, height=1080)],
             )
 
             assert res.status == "success"
@@ -181,7 +165,7 @@ class TestScrape:
             httpx.Client, "request", return_value=mock_response({"detail": "Invalid key"}, 401)
         ):
             sgai = ScrapeGraphAI(api_key=API_KEY)
-            res = sgai.scrape(ScrapeRequest(url="https://example.com"))
+            res = sgai.scrape("https://example.com")
 
             assert res.status == "error"
             assert "Invalid or missing API key" in res.error
@@ -189,7 +173,7 @@ class TestScrape:
     def test_http_402_error(self):
         with patch.object(httpx.Client, "request", return_value=mock_response({}, 402)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
-            res = sgai.scrape(ScrapeRequest(url="https://example.com"))
+            res = sgai.scrape("https://example.com")
 
             assert res.status == "error"
             assert "Insufficient credits" in res.error
@@ -197,7 +181,7 @@ class TestScrape:
     def test_http_429_error(self):
         with patch.object(httpx.Client, "request", return_value=mock_response({}, 429)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
-            res = sgai.scrape(ScrapeRequest(url="https://example.com"))
+            res = sgai.scrape("https://example.com")
 
             assert res.status == "error"
             assert "Rate limited" in res.error
@@ -205,7 +189,7 @@ class TestScrape:
     def test_timeout_error(self):
         with patch.object(httpx.Client, "request", side_effect=httpx.TimeoutException("timeout")):
             sgai = ScrapeGraphAI(api_key=API_KEY)
-            res = sgai.scrape(ScrapeRequest(url="https://example.com"))
+            res = sgai.scrape("https://example.com")
 
             assert res.status == "error"
             assert "timed out" in res.error
@@ -219,13 +203,11 @@ class TestExtract:
             "usage": {"promptTokens": 100, "completionTokens": 50},
             "metadata": {},
         }
-        with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
+        with patch.object(httpx.Client, "request", return_value=mock_response(body)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.extract(
-                ExtractRequest(
-                    url="https://example.com",
-                    prompt="What is this page about?",
-                )
+                prompt="What is this page about?",
+                url="https://example.com",
             )
 
             assert res.status == "success"
@@ -241,11 +223,9 @@ class TestExtract:
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.extract(
-                ExtractRequest(
-                    url="https://example.com",
-                    prompt="Extract data",
-                    schema={"type": "object"},
-                )
+                prompt="Extract data",
+                url="https://example.com",
+                schema={"type": "object"},
             )
 
             assert res.status == "success"
@@ -261,7 +241,7 @@ class TestSearch:
         }
         with patch.object(httpx.Client, "request", return_value=mock_response(body)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
-            res = sgai.search(SearchRequest(query="test query", num_results=5))
+            res = sgai.search("test query", num_results=5)
 
             assert res.status == "success"
             assert len(res.data.results) == 1
@@ -274,12 +254,7 @@ class TestSearch:
         }
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
-            res = sgai.search(
-                SearchRequest(
-                    query="test",
-                    prompt="Summarize results",
-                )
-            )
+            res = sgai.search("test", prompt="Summarize results")
 
             assert res.status == "success"
             _, kwargs = mock.call_args
@@ -292,11 +267,9 @@ class TestCrawl:
         with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.crawl.start(
-                CrawlRequest(
-                    url="https://example.com",
-                    max_pages=10,
-                    max_depth=2,
-                )
+                "https://example.com",
+                max_pages=10,
+                max_depth=2,
             )
 
             assert res.status == "success"
@@ -338,14 +311,12 @@ class TestMonitor:
             "createdAt": "2024-01-01T00:00:00Z",
             "updatedAt": "2024-01-01T00:00:00Z",
         }
-        with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
+        with patch.object(httpx.Client, "request", return_value=mock_response(body)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
             res = sgai.monitor.create(
-                MonitorCreateRequest(
-                    url="https://example.com",
-                    name="Test Monitor",
-                    interval="0 * * * *",
-                )
+                "https://example.com",
+                "0 * * * *",
+                name="Test Monitor",
             )
 
             assert res.status == "success"
@@ -399,9 +370,9 @@ class TestHistory:
             ],
             "pagination": {"page": 1, "limit": 20, "total": 100},
         }
-        with patch.object(httpx.Client, "request", return_value=mock_response(body)) as mock:
+        with patch.object(httpx.Client, "request", return_value=mock_response(body)):
             sgai = ScrapeGraphAI(api_key=API_KEY)
-            res = sgai.history.list(HistoryFilter(limit=5, service="scrape"))
+            res = sgai.history.list(limit=5, service="scrape")
 
             assert res.status == "success"
             assert res.data.pagination.total == 100
@@ -471,14 +442,9 @@ class TestCamelCaseSerialization:
         with patch.object(httpx.Client, "request", return_value=mock_response({})) as mock:
             sgai = ScrapeGraphAI(api_key=API_KEY)
             sgai.scrape(
-                ScrapeRequest(
-                    url="https://example.com",
-                    content_type="application/pdf",
-                    fetch_config=FetchConfig(
-                        mode="js",
-                        timeout=30000,
-                    ),
-                )
+                "https://example.com",
+                content_type="application/pdf",
+                fetch_config=FetchConfig(mode="js", timeout=30000),
             )
 
             _, kwargs = mock.call_args

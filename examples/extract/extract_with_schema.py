@@ -1,14 +1,16 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import json
-from scrapegraph_py import ScrapeGraphAI, ExtractRequest
+
+from scrapegraph_py import ScrapeGraphAI
 
 sgai = ScrapeGraphAI()
 
-res = sgai.extract(ExtractRequest(
+res = sgai.extract(
+    "Extract structured information about this page",
     url="https://example.com",
-    prompt="Extract structured information about this page",
     schema={
         "type": "object",
         "properties": {
@@ -21,7 +23,7 @@ res = sgai.extract(ExtractRequest(
         },
         "required": ["title"],
     },
-))
+)
 
 if res.status == "success":
     print("Extracted:", json.dumps(res.data.json_data, indent=2))

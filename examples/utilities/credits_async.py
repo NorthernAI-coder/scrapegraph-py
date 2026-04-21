@@ -1,8 +1,11 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import asyncio
+
 from scrapegraph_py import AsyncScrapeGraphAI
+
 
 async def main():
     async with AsyncScrapeGraphAI() as sgai:
@@ -17,5 +20,6 @@ async def main():
             print("  Monitor:", res.data.jobs.monitor.used, "/", res.data.jobs.monitor.limit)
         else:
             print("Failed:", res.error)
+
 
 asyncio.run(main())

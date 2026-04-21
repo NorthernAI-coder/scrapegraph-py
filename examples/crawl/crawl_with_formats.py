@@ -1,25 +1,26 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
 import time
+
 from scrapegraph_py import (
-    ScrapeGraphAI,
-    CrawlRequest,
-    MarkdownFormatConfig,
     LinksFormatConfig,
+    MarkdownFormatConfig,
+    ScrapeGraphAI,
 )
 
 sgai = ScrapeGraphAI()
 
-start_res = sgai.crawl.start(CrawlRequest(
-    url="https://scrapegraphai.com/",
+start_res = sgai.crawl.start(
+    "https://scrapegraphai.com/",
     max_pages=3,
     max_depth=1,
     formats=[
         MarkdownFormatConfig(),
         LinksFormatConfig(),
     ],
-))
+)
 
 if start_res.status != "success" or not start_res.data:
     print("Failed to start:", start_res.error)

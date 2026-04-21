@@ -1,15 +1,16 @@
 from dotenv import load_dotenv
+
 load_dotenv()
 
-from scrapegraph_py import ScrapeGraphAI, ScrapeRequest, MarkdownFormatConfig
+from scrapegraph_py import MarkdownFormatConfig, ScrapeGraphAI
 
 sgai = ScrapeGraphAI()
 
-res = sgai.scrape(ScrapeRequest(
-    url="https://pdfobject.com/pdf/sample.pdf",
+res = sgai.scrape(
+    "https://pdfobject.com/pdf/sample.pdf",
     content_type="application/pdf",
     formats=[MarkdownFormatConfig()],
-))
+)
 
 if res.status == "success":
     print("Markdown:", res.data.results.get("markdown", {}).get("data"))
