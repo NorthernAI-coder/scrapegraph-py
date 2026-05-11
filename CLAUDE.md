@@ -58,6 +58,20 @@ uv run pytest tests/ -v
 
 No exceptions.
 
+## Versioning & Releases
+
+Use **semantic-release** to manage versions. Prefer **patch bumps (+0.0.1)** as much as possible — reserve minor (+0.1.0) for genuinely new user-facing features and major (+1.0.0) for breaking changes only.
+
+Commit message conventions that drive the bump:
+
+- `fix:` → patch (+0.0.1) — **default choice** for most changes
+- `docs:` → patch (+0.0.1) — documentation updates
+- `chore:` → patch (+0.0.1) — maintenance, tooling, deps
+- `feat:` → minor (+0.1.0) — only for meaningful new features
+- `BREAKING CHANGE:` footer or `!` suffix → major (+1.0.0) — only for breaking API changes
+
+When in doubt, frame the change as `fix:`, `docs:`, or `chore:` to keep the bump at patch level.
+
 ## Architecture
 
 **Core Components:**
