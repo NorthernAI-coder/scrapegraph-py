@@ -325,15 +325,6 @@ async with AsyncScrapeGraphAI() as sgai:
 | `SGAI_DEBUG` | Enable debug logging (`"1"`) | off |
 | `SGAI_TIMEOUT` | Request timeout in seconds | `120` |
 
-## Development
-
-```bash
-uv sync
-uv run pytest tests/              # unit tests
-uv run pytest tests/test_integration.py  # live API tests (requires SGAI_API_KEY)
-uv run ruff check .               # lint
-```
-
 ## License
 
 MIT - [ScrapeGraphAI](https://scrapegraphai.com)
